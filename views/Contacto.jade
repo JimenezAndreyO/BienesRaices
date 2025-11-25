@@ -1,0 +1,96 @@
+doctype html
+html(lang="es")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    title Crear Ticket de Soporte
+    link(rel="stylesheet", href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css")
+    link(rel="stylesheet", href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css")
+    style.
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
+      .container {
+        max-width: 400px;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        width: 100%;
+      }
+      .header {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 20px;
+        color: #333;
+      }
+      .header i {
+        margin-right: 10px;
+        font-size: 24px;
+      }
+      h1 {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #333;
+      }
+      form {
+        display: flex;
+        flex-direction: column;
+      }
+      label {
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      input[type="text"],
+      input[type="email"],
+      input[type="submit"] {
+        margin-bottom: 10px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        transition: border-color 0.3s;
+        font-size: 16px;
+      }
+      input[type="text"]:focus,
+      input[type="email"]:focus {
+        border-color: #77c;
+        outline: none;
+      }
+      input[type="submit"] {
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        padding: 12px;
+        font-size: 16px;
+        border-radius: 50px;
+        margin-top: 10px;
+      }
+      input[type="submit"]:hover {
+        background-color: #0056b3;
+      }
+  body
+    .container
+      .header
+        i.fas.fa-ticket-alt
+        h1 Crear Ticket de Soporte
+      form(method="post", action="/Notas/altatiket")
+        .form-group
+          label(for="Nombre") Nombre:
+          input#Nombre.form-control(type="text", name="Nombre", required)
+        .form-group
+          label(for="Comentario") Nota:
+          input#Nota.form-control(type="text", name="Nota", required)
+        input.btn.btn-primary(type="submit", value="Agregar")
+    script(src="https://code.jquery.com/jquery-3.5.1.slim.min.js")
+    script(src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js")
+    script(src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js")
+    script(src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js")

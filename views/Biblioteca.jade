@@ -1,0 +1,56 @@
+doctype html
+html
+  head
+    title Casas
+    link(rel="stylesheet", href="/stylesheets/styleBiblioteca.css")
+
+  body
+    .container
+      h1 Lista de Casas
+
+      if !casas || casas.length === 0
+        p No hay casas registradas.
+
+      else
+        each casa in casas
+          .card
+            if casa.ImagenBase64
+              img.card-img(src=casa.ImagenBase64, alt="Imagen de la casa")
+            else
+              img.card-img(src="/images/sin-imagen.png", alt="Sin imagen")
+
+            .card-content
+              h2= casa.titulo
+              p Dirección: #{casa.direccion}
+              p Precio: ₡#{casa.precio}
+              p Estado: #{casa.estado}
+
+              .buttons
+                button.view-btn(onclick=`verCasa(${casa.idCasaVenta})`) Ver Información
+                button.edit-btn(onclick=`cambiarEstado(${casa.idCasaVenta})`) Cambiar Estado
+                button.delete-btn(onclick=`eliminarCasa(${casa.idCasaVenta})`) Eliminar
+
+    script.
+      function verCasa(id) {
+        window.location.href = "/casas/" + id;
+      }
+
+      function eliminarCasa(id) {
+        if (!confirm("¿Seguro que deseas eliminar esta casa?")) return;
+
+        fetch("/CompraCasa/EliminarCasa/" + id, { method: "DELETE" })
+          .then(res => res.json())
+          .then(data => {
+            alert(data.mensaje);
+            location.reload();
+          });
+      }
+
+      function cambiarEstado(id) {
+        fetch("/CompraCasa/ModificarCasa/" + id, { method: "PUT" })
+          .then(res => res.json())
+          .then(data => {
+            alert(data.mensaje);
+            location.reload();
+          });
+      }

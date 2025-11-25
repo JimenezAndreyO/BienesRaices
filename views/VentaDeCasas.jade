@@ -1,0 +1,131 @@
+doctype html
+html(lang="es")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title Agregar Casas en Venta
+    link(rel="stylesheet" href="/stylesheets/StyleVentas.css")
+
+  body
+    .container
+      header
+        h1 Agregar Casas en Venta
+
+      .content
+        form#mainForm(action="/CompraCasa/RegistroCasa" method="POST" enctype="multipart/form-data")
+          #houses-container
+
+          button.add-house-btn#add-house(type="button")
+            svg(fill="none" stroke="currentColor" viewBox="0 0 24 24")
+              path(stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4")
+            | Agregar Otra Casa
+
+          button.submit-btn(type="submit") Guardar Todas las Casas
+
+    // JavaScript para agregar casas dinámicamente
+    script.
+      const container = document.getElementById('houses-container');
+      const addBtn = document.getElementById('add-house');
+      let houseCount = 0;
+
+      function createHouseForm() {
+        houseCount++;
+        const index = houseCount;
+
+        const formHTML = `
+          <div class="house-form" data-index="${index}">
+            <div class="house-title">
+              <span>Casa #${index}</span>
+              <button type="button" class="remove-house" onclick="removeHouse(this)">X</button>
+            </div>
+
+            <div class="form-grid">
+              <!-- IMAGEN -->
+              <div class="form-group">
+                <label>Imagen de la casa *</label>
+                <input type="file" name="casas[${index}][Imagen]" accept="image/*" required>
+              </div>
+
+              <!-- NOMBRE -->
+              <div class="form-group">
+                <label>Nombre *</label>
+                <input type="text" name="casas[${index}][Nombre]" placeholder="Nombre" required>
+              </div>
+
+              <!-- APELLIDOS -->
+              <div class="form-group">
+                <label>Primer Apellido *</label>
+                <input type="text" name="casas[${index}][Apellido1]" placeholder="Primer apellido" required>
+              </div>
+              <div class="form-group">
+                <label>Segundo Apellido *</label>
+                <input type="text" name="casas[${index}][Apellido2]" placeholder="Segundo apellido" required>
+              </div>
+
+              <!-- CONTACTO -->
+              <div class="form-group">
+                <label>Teléfono *</label>
+                <input type="text" name="casas[${index}][Telefono]" placeholder="Número de teléfono" required>
+              </div>
+              <div class="form-group">
+                <label>Correo *</label>
+                <input type="email" name="casas[${index}][CorreoElectronico]" placeholder="Correo" required>
+              </div>
+
+              <!-- DIRECCIÓN -->
+              <div class="form-group full-width">
+                <label>Dirección *</label>
+                <input type="text" name="casas[${index}][Direccion]" placeholder="Dirección exacta" required>
+              </div>
+
+              <!-- UBICACIÓN -->
+              <div class="form-group">
+                <label>País *</label>
+                <input type="text" name="casas[${index}][Pais]" placeholder="País" required>
+              </div>
+              <div class="form-group">
+                <label>Ciudad *</label>
+                <input type="text" name="casas[${index}][Ciudad]" placeholder="Ciudad" required>
+              </div>
+
+              <!-- DESCRIPCIÓN -->
+              <div class="form-group full-width">
+                <label>Descripción</label>
+                <textarea name="casas[${index}][Descripcion]" placeholder="Descripción de la propiedad"></textarea>
+              </div>
+
+              <!-- PRECIO Y ESTADO -->
+              <div class="form-group">
+                <label>Precio *</label>
+                <input type="number" name="casas[${index}][Precio]" step="0.01" placeholder="0.00" required>
+              </div>
+              <div class="form-group">
+                <label>Estado *</label>
+                <select name="casas[${index}][Estado]" required>
+                  <option value="venta">Venta</option>
+                  <option value="apartado">Apartado</option>
+                  <option value="vendido">Vendido</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        `;
+
+        const div = document.createElement('div');
+        div.innerHTML = formHTML;
+        container.appendChild(div.firstElementChild);
+      }
+
+      function removeHouse(btn) {
+        const form = btn.closest('.house-form');
+        form.classList.add('removing');
+        setTimeout(() => form.remove(), 300);
+      }
+
+      // Cargar primera casa al iniciar
+      window.addEventListener('load', () => {
+        createHouseForm();
+      });
+
+      // Botón para agregar más
+      addBtn.addEventListener('click', createHouseForm);

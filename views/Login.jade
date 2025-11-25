@@ -1,0 +1,59 @@
+doctype html
+html(lang="en")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    title Sign In / Sign Up Form
+    link(rel="stylesheet", href="/stylesheets/styleLogins.css")
+
+  body
+    .container#container
+      // 🔹 Formulario de REGISTRO
+      .form-container.sign-up-container
+        form(method="post", action="/Usuarios/RegistroPersonas")
+          h1 Crear Cuenta
+          span Registro de nueva persona
+          input(type="text", name="identificacion", placeholder="Identificación", required)
+          input(type="text", name="nombre", placeholder="Nombre", required)
+          input(type="text", name="apellido1", placeholder="Primer Apellido", required)
+          input(type="text", name="apellido2", placeholder="Segundo Apellido", required)
+          input(type="number", name="edad", placeholder="Edad", required)
+          input(type="email", name="correo", placeholder="Correo", required)
+          input(type="text", name="usuario", placeholder="Usuario", required)
+          input(type="password", name="contrasena", placeholder="Contrasena", required)
+          input(type="text", name="telefono", placeholder="Teléfono", required)
+          input(type="text", name="palabraClave", placeholder="Palabra Clave", required)
+          input(type="submit", value="Agregar")
+
+      // 🔹 Formulario de INICIO DE SESIÓN
+      .form-container.sign-in-container
+       form(method="post", action="/Usuarios/InicioSesion")
+          h1 Inicio de sesión
+          input.form-control(type="text", name="usuario", placeholder="Usuario", required)
+          input.form-control(type="password", name="contrasena", placeholder="Contrasena", required)
+          input(type="submit", value="Aceptar")
+          a(href="#") ¿Olvidaste tu contraseña?
+
+      // 🔹 Panel de animación (overlay)
+      .overlay-container
+        .overlay
+          .overlay-panel.overlay-left
+            h1 Bienvenido de nuevo!
+            p Conecta con clientes o vende nuevas propiedades o lotes y contacta con gente interesada
+            button.ghost#signIn(type="button") Sign In
+          .overlay-panel.overlay-right
+            h1 Bienvenido!
+            p Regístrate como usuario nuevo.
+            button.ghost#signUp(type="button") Sign Up
+
+    footer
+      p
+        | Created with 
+        i.fa.fa-heart
+        |  by 
+        a(target="_blank", href="https://florin-pop.com") Florin Pop
+        |  - Read how I created this and how you can join the challenge 
+        a(target="_blank", href="https://www.florin-pop.com/blog/2019/03/double-slider-sign-in-up-form/") here
+        | .
+
+    script(src="/javascripts/Login.js")

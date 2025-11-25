@@ -1,0 +1,14 @@
+extends layout
+
+block content
+  h1= message || "Error"
+
+  if error && error.status
+    h2= error.status
+  else
+    h2 Código desconocido
+
+  if error && error.stack
+    pre #{error.stack}
+  else
+    pre No hay detalles del error disponibles.
