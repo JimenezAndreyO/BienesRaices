@@ -20,18 +20,17 @@ html(lang="es")
             li.nav-item
               a.nav-link(href="#") Inicio
             li.nav-item
-               a.nav-link.text-white(href="/Usuarios/Registro", class="enlace")
+              a.nav-link.text-white(href="/Usuarios/Registro", class="enlace")
                 i.fas.fa-info-circle.mr-1
-                  | Login
+                | Login
             li.nav-item
               a.nav-link(href="#") Propiedades
             li.nav-item
               a.nav-link(href="#") Lotes
             li.nav-item
-            a.nav-link.text-white(href="/Notas/altatiket", class="enlace")
-                  i.fas.fa-info-circle.mr-1
-                  | Contactanos
-             
+              a.nav-link.text-white(href="/Notas/altatiket", class="enlace")
+                i.fas.fa-info-circle.mr-1
+                | Contactanos
 
     // Hero Section
     .hero
@@ -39,7 +38,36 @@ html(lang="es")
       .container.position-relative.text-center
         h1 Encuentra tu hogar ideal
         p Las mejores propiedades al mejor precio
-     
+
+    // Listado de propiedades
+    .container.mt-5
+      h2.text-center.mb-4 Propiedades en venta
+
+      if casas && casas.length > 0
+        .row.row-cols-1.row-cols-md-3.g-4
+          each casa in casas
+            .col
+              .card.shadow-sm
+                if casa.ImagenBase64
+                  img.card-img-top(
+                    src=`data:image/jpeg;base64,${casa.ImagenBase64}`
+                    alt="Imagen de la casa"
+                    style="height: 220px; object-fit: cover;"
+                  )
+                else
+                  img.card-img-top(src="/img/no-image.jpg", alt="Sin imagen")
+
+                .card-body
+                  h5.card-title= casa.Direccion
+                  p.card-text #{casa.Ciudad}, #{casa.Pais}
+                  p.card-text
+                    strong Precio:
+                    |  $#{casa.Precio}
+
+                  a.btn.btn-primary(href=`/Casa/Detalle/${casa.idCasaVenta}`) Ver más
+      else
+        p.text-center No hay propiedades en venta por el momento.
+
     // Footer
     footer.mt-5
       p © 2025 Bienes Raíces - Todos los derechos reservados

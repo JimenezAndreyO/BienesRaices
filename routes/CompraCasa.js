@@ -81,76 +81,92 @@ router.get('/EliminarCasa', function (req, res) {
 
 });
 
-router.post('/RegistroCasa', upload.any(), async function (req, res, next) {
-    if (!req.session.IdPersona) {
-        return res.status(401).send("Debe iniciar sesión para registrar una casa.");
+
+
+router.post('/RegistroCasa', upload.any(), function (req, res, next) {
+
+  if (!req.session.IdPersona) {
+      return res.status(401).send("Debe iniciar sesión para registrar una casa.");
+  }
+
+  const idPersona = req.session.IdPersona;
+
+
+  let casas = req.body.casas;
+  const files = req.files;
+
+  if (!casas) {
+    return res.status(400).send("No se enviaron casas.");
+  }
+
+
+  const casasObj = casas;
+  casas = Object.keys(casasObj).map(k => casasObj[k]);
+
+  console.log("📦 Casas procesadas:", casas);
+  console.log("🖼️ Archivos recibidos:", files);
+
+  // 3. Asignar imagen
+  files.forEach(file => {
+    const match = file.fieldname.match(/casas\[(\d+)\]\[Imagen\]/);
+
+    if (match) {
+      const index = parseInt(match[1]);
+      const realIndex = index - 1;
+
+      if (casas[realIndex]) {
+        casas[realIndex].Imagen = file.buffer;
+      }
+    }
+  });
+
+  let casasProcesadas = 0;
+casas.forEach((casa, index) => {
+
+    console.log("➡️ Procesando casa:", index);
+
+    if (!casa.Imagen) {
+      console.error("❌ No hay imagen para la casa:", index);
+      return res.status(400).send(`Falta la imagen en la casa ${index + 1}`);
     }
 
-    const idPersona = req.session.IdPersona;
-    let casas = req.body.casas;
-    const files = req.files;
+    const sql = `CALL sp_InsertarCasaVenta(?, ?, ?, ?, ?, ?, ?)`;
 
-    if (!casas || Object.keys(casas).length === 0) {
-        return res.status(400).send("No se enviaron casas.");
-    }
+    const parametros = [
+      idPersona,
+      casa.Imagen,
+      casa.Direccion,
+      casa.Pais,
+      casa.Ciudad,
+      casa.Descripcion,
+      casa.Precio
+    ];
 
-    // Convertir el objeto casas {0: {...}, 1: {...}} → array
-    casas = Object.values(casas);
+    console.log("➡️ Ejecutando SP con parámetros:", parametros);
 
-    // Asignar imágenes a cada casa
-    files.forEach(file => {
-        const match = file.fieldname.match(/casas\[(\d+)\]\[Imagen\]/);
-        if (match) {
-            const index = parseInt(match[1]);
-            if (casas[index]) {
-                casas[index].Imagen = file.buffer; // Buffer de la imagen
-            }
-        }
+    bd.query(sql, parametros, function (err, result) {
+
+      if (err) {
+        console.error("❌ Error al insertar casa:", err.sqlMessage || err);
+        console.error("⚠️ Error ocurrió en la casa:", index);
+        return res.status(500).send("Error insertando casa en la BD.");
+      }
+
+      console.log("✔ Casa insertada correctamente:", index);
+
+      casasProcesadas++;
+      console.log(`📊 Progreso: ${casasProcesadas}/${casas.length}`);
+
+      if (casasProcesadas === casas.length) {
+        console.log("🎉 TODAS las casas insertadas. Redirigiendo...");
+        return res.redirect("/CargarBiblioteca");
+      }
+
     });
 
-    try {
-        // Aquí convertimos cada query en una Promise
-        const promesas = casas.map((casa, index) => {
-            return new Promise((resolve, reject) => {
-                if (!casa.Imagen) {
-                    return reject(`Falta la imagen en la casa ${index + 1}`);
-                }
-
-                const sql = `CALL sp_InsertarCasaVenta(?, ?, ?, ?, ?, ?, ?)`;
-                const parametros = [
-                    idPersona,
-                    casa.Imagen,
-                    casa.Direccion,
-                    casa.Pais,
-                    casa.Ciudad,
-                    casa.Descripcion,
-                    casa.Precio
-                ];
-
-                bd.query(sql, parametros, (err, result) => {
-                    if (err) {
-                        console.error("Error casa", index, err);
-                        reject(`Error al insertar la casa ${index + 1}: ${err.sqlMessage || err.message}`);
-                    } else {
-                        console.log(`Casa ${index + 1} insertada correctamente`);
-                        resolve(result);
-                    }
-                });
-            });
-        });
-
-        // Esperamos a que TODAS terminen (o falle alguna)
-        await Promise.all(promesas);
-
-        console.log("TODAS las casas insertadas con éxito");
-        return res.redirect("/CargarBiblioteca");
-
-    } catch (error) {
-        console.error("Error en el registro de casas:", error);
-        return res.status(400).send(error); // o 500 si prefieres
-    }
 });
 
+});
 
 
 module.exports = router;

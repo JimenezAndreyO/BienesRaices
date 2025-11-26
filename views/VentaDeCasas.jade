@@ -46,6 +46,12 @@ html(lang="es")
                 <input type="file" name="casas[${index}][Imagen]" accept="image/*" required>
               </div>
 
+              <!-- CONTACTO -->
+              <div class="form-group">
+                <label>Teléfono *</label>
+                <input type="text" name="casas[${index}][Telefono]" placeholder="Número de teléfono" required>
+              </div>
+              
               <!-- NOMBRE -->
               <div class="form-group">
                 <label>Nombre *</label>
@@ -62,11 +68,7 @@ html(lang="es")
                 <input type="text" name="casas[${index}][Apellido2]" placeholder="Segundo apellido" required>
               </div>
 
-              <!-- CONTACTO -->
-              <div class="form-group">
-                <label>Teléfono *</label>
-                <input type="text" name="casas[${index}][Telefono]" placeholder="Número de teléfono" required>
-              </div>
+              
               <div class="form-group">
                 <label>Correo *</label>
                 <input type="email" name="casas[${index}][CorreoElectronico]" placeholder="Correo" required>
