@@ -40,13 +40,95 @@ html(lang="es")
                   | Contactanos
              
 
+
     // Hero Section
     .hero
       .hero-overlay
       .container.position-relative.text-center
         h1 Encuentra tu hogar ideal
         p Las mejores propiedades al mejor precio
-     
+
+
+    .container.mt-4
+      form(method="GET" action="/" class="p-4 shadow rounded bg-light")
+        .row.g-3
+          .col-md-3
+            label.form-label Ciudad
+            input.form-control(type="text" name="ciudad" value=(typeof ciudad !== 'undefined' ? ciudad : '') placeholder="Ej: San José")
+          .col-md-3
+            label.form-label País
+            input.form-control(type="text" name="pais" value=(typeof pais !== 'undefined' ? pais : '') placeholder="Ej: Costa Rica")
+          .col-md-2
+            label.form-label Precio mínimo
+            input.form-control(type="number" name="precioMin" min="0")
+          .col-md-2
+            label.form-label Precio máximo
+            input.form-control(type="number" name="precioMax" min="0")
+          .col-md-2.d-flex.align-items-end
+            button.btn.btn-primary.w-100(type="submit") Buscar
+
+    // ===========================
+    // CARRUSEL ÚLTIMAS 5 CASAS
+    // ===========================
+    if ultimas && ultimas.length > 0
+      .container.mt-5
+        h2.text-center.mb-4 Últimas propiedades en venta
+
+        #carouselUltimas.carousel.slide(
+          data-bs-ride="carousel"
+          data-bs-interval="3000"
+          data-bs-pause="hover"
+        )
+          .carousel-inner
+            each casa, i in ultimas
+              .carousel-item(class=(i === 0 ? "active" : ""))
+                if casa.ImagenBase64
+                  img.d-block.w-100(
+                    src=`data:image/jpeg;base64,${casa.ImagenBase64}`
+                    style="height:420px; object-fit:cover"
+                  )
+                else
+                  img.d-block.w-100(src="/img/no-image.jpg" style="height:420px; object-fit:cover")
+
+                .carousel-caption.bg-dark.bg-opacity-50.p-2.rounded
+                  h4= casa.Direccion
+                  p ₡#{casa.Precio}
+
+          // CONTROLES DEL CARRUSEL
+          button.carousel-control-prev(type="button" data-bs-target="#carouselUltimas" data-bs-slide="prev")
+            span.carousel-control-prev-icon
+          button.carousel-control-next(type="button" data-bs-target="#carouselUltimas" data-bs-slide="next")
+            span.carousel-control-next-icon
+
+
+    .container.mt-5
+      h2.text-center.mb-4 Todas las propiedades
+
+      if casas && casas.length > 0
+        .row.row-cols-1.row-cols-md-3.g-4
+          each casa in casas
+            .col
+              .card.shadow-sm
+                if casa.ImagenBase64
+                  img.card-img-top(
+                    src=`data:image/jpeg;base64,${casa.ImagenBase64}`
+                    alt="Imagen de la casa"
+                    style="height: 220px; object-fit: cover;"
+                  )
+                else
+                  img.card-img-top(src="/img/no-image.jpg", alt="Sin imagen")
+
+                .card-body
+                  h5.card-title= casa.Direccion
+                  p.card-text #{casa.Ciudad}, #{casa.Pais}
+                  p.card-text
+                    strong Precio:
+                    |  ₡#{casa.Precio}
+
+                  a.btn.btn-primary(href=`/Casa/Detalle/${casa.idCasaVenta}`) Ver más
+      else
+        p.text-center No hay propiedades en venta por el momento.
+
     // Footer
     footer.mt-5
       p © 2025 Bienes Raíces - Todos los derechos reservados
