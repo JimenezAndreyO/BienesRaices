@@ -5,7 +5,7 @@ require('dotenv').config();
 
 const multer = require('multer');
 
-// ⭐ USAR STORAGE EN MEMORIA PARA GUARDAR LA IMAGEN EN MYSQL ⭐
+
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
@@ -80,93 +80,77 @@ router.get('/EliminarCasa', function (req, res) {
     });
 
 });
+router.post('/RegistroCasa', upload.any(), function (req, res) {
 
-
-
-router.post('/RegistroCasa', upload.any(), function (req, res, next) {
-
-  if (!req.session.IdPersona) {
-      return res.status(401).send("Debe iniciar sesión para registrar una casa.");
-  }
-
-  const idPersona = req.session.IdPersona;
-
-
-  let casas = req.body.casas;
-  const files = req.files;
-
-  if (!casas) {
-    return res.status(400).send("No se enviaron casas.");
-  }
-
-
-  const casasObj = casas;
-  casas = Object.keys(casasObj).map(k => casasObj[k]);
-
-  console.log("📦 Casas procesadas:", casas);
-  console.log("🖼️ Archivos recibidos:", files);
-
-  // 3. Asignar imagen
-  files.forEach(file => {
-    const match = file.fieldname.match(/casas\[(\d+)\]\[Imagen\]/);
-
-    if (match) {
-      const index = parseInt(match[1]);
-      const realIndex = index - 1;
-
-      if (casas[realIndex]) {
-        casas[realIndex].Imagen = file.buffer;
-      }
-    }
-  });
-
-  let casasProcesadas = 0;
-casas.forEach((casa, index) => {
-
-    console.log("➡️ Procesando casa:", index);
-
-    if (!casa.Imagen) {
-      console.error("❌ No hay imagen para la casa:", index);
-      return res.status(400).send(`Falta la imagen en la casa ${index + 1}`);
+    if (!req.session.IdPersona) {
+        return res.status(401).send("Debe iniciar sesión para registrar una casa.");
     }
 
-    const sql = `CALL sp_InsertarCasaVenta(?, ?, ?, ?, ?, ?, ?)`;
+    const idPersona = req.session.IdPersona;
 
-    const parametros = [
-      idPersona,
-      casa.Imagen,
-      casa.Direccion,
-      casa.Pais,
-      casa.Ciudad,
-      casa.Descripcion,
-      casa.Precio
-    ];
+    let casas = req.body.casas;
+    const files = req.files;
 
-    console.log("➡️ Ejecutando SP con parámetros:", parametros);
+    if (!casas) {
+        return res.status(400).send("No se enviaron casas.");
+    }
 
-    bd.query(sql, parametros, function (err, result) {
+    // Convertir objeto a array
+    casas = Object.keys(casas).map(k => casas[k]);
 
-      if (err) {
-        console.error("❌ Error al insertar casa:", err.sqlMessage || err);
-        console.error("⚠️ Error ocurrió en la casa:", index);
-        return res.status(500).send("Error insertando casa en la BD.");
-      }
+    // Asignar imágenes
+    files.forEach(file => {
+        const match = file.fieldname.match(/casas\[(\d+)\]\[Imagen\]/);
+        if (match) {
+            const index = parseInt(match[1]) - 1;
+            if (casas[index]) {
+                casas[index].Imagen = file.buffer;
+            }
+        }
+    });
 
-      console.log("✔ Casa insertada correctamente:", index);
+    let casasProcesadas = 0;
 
-      casasProcesadas++;
-      console.log(`📊 Progreso: ${casasProcesadas}/${casas.length}`);
+    casas.forEach((casa, index) => {
 
-      if (casasProcesadas === casas.length) {
-        console.log("🎉 TODAS las casas insertadas. Redirigiendo...");
-        return res.redirect("/CargarBiblioteca");
-      }
+        if (!casa.Imagen) {
+            return res.status(400).send(`Falta la imagen en la casa ${index + 1}`);
+        }
+
+        const sql = `CALL sp_InsertarCasaVenta(?, ?, ?, ?, ?, ?, ?)`;
+
+        const parametros = [
+            idPersona,
+            casa.Imagen,
+            casa.Direccion,
+            casa.Pais,
+            casa.Ciudad,
+            casa.Descripcion,
+            casa.Precio
+        ];
+
+        bd.query(sql, parametros, function (err) {
+
+            if (err) {
+                console.error("❌ Error al insertar casa:", err.sqlMessage || err);
+                return res.status(500).send("Error insertando casa en la BD.");
+            }
+
+            casasProcesadas++;
+
+            if (casasProcesadas === casas.length) {
+                return res.redirect("/CompraCasa/CargarBiblioteca");
+
+            }
+
+        });
 
     });
 
 });
 
-});
+
+
 
 
 module.exports = router;
