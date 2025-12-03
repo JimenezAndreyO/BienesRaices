@@ -95,16 +95,16 @@ router.post('/RegistroCasa', upload.any(), function (req, res) {
         return res.status(400).send("No se enviaron casas.");
     }
 
-    // Convertir objeto a array
+    // Convertir objeto a array real
     casas = Object.keys(casas).map(k => casas[k]);
 
-    // Asignar imágenes
+    // Asignar imágenes según su índice
     files.forEach(file => {
         const match = file.fieldname.match(/casas\[(\d+)\]\[Imagen\]/);
         if (match) {
             const index = parseInt(match[1]) - 1;
             if (casas[index]) {
-                casas[index].Imagen = file.buffer;
+                casas[index].Imagen = file.buffer; // Guardar BLOB
             }
         }
     });
@@ -113,10 +113,13 @@ router.post('/RegistroCasa', upload.any(), function (req, res) {
 
     casas.forEach((casa, index) => {
 
+        // Validar imagen
         if (!casa.Imagen) {
-            return res.status(400).send(`Falta la imagen en la casa ${index + 1}`);
+            return res.status(400).send(`Falta la imagen en la casa #${index + 1}`);
         }
 
+        // El SP recibe SOLO estos parámetros:
+        // p_idPersona, p_Imagen, p_Direccion, p_Pais, p_Ciudad, p_Descripcion, p_Precio
         const sql = `CALL sp_InsertarCasaVenta(?, ?, ?, ?, ?, ?, ?)`;
 
         const parametros = [
@@ -125,7 +128,7 @@ router.post('/RegistroCasa', upload.any(), function (req, res) {
             casa.Direccion,
             casa.Pais,
             casa.Ciudad,
-            casa.Descripcion,
+            casa.Descripcion || "",
             casa.Precio
         ];
 
@@ -140,7 +143,6 @@ router.post('/RegistroCasa', upload.any(), function (req, res) {
 
             if (casasProcesadas === casas.length) {
                 return res.redirect("/CompraCasa/CargarBiblioteca");
-
             }
 
         });

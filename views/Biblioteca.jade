@@ -1,7 +1,9 @@
 doctype html
-html
+html(lang="es")
   head
-    title Casas
+    meta(charset="UTF-8")
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    title Biblioteca de Casas
     link(rel="stylesheet", href="/stylesheets/styleBiblioteca.css")
 
   body
@@ -10,29 +12,41 @@ html
 
       if !casas || casas.length === 0
         p No hay casas registradas.
-
       else
         each casa in casas
-          .card
+          .card(data-id=casa.idCasaVenta)
             if casa.ImagenBase64
               img.card-img(src=casa.ImagenBase64, alt="Imagen de la casa")
             else
               img.card-img(src="/images/sin-imagen.png", alt="Sin imagen")
 
             .card-content
-              h2= casa.titulo
-              p Dirección: #{casa.direccion}
-              p Precio: ₡#{casa.precio}
-              p Estado: #{casa.estado}
+              h2 Casa #{casa.idCasaVenta}
+              p Dirección: #{casa.Direccion}
+              p Precio: ₡#{casa.Precio}
+              p Estado: #{casa.Estado}
 
-              .buttons
-                button.view-btn(onclick=`verCasa(${casa.idCasaVenta})`) Ver Información
-                button.edit-btn(onclick=`cambiarEstado(${casa.idCasaVenta})`) Cambiar Estado
-                button.delete-btn(onclick=`eliminarCasa(${casa.idCasaVenta})`) Eliminar
+              button.view-btn(onclick=`toggleInfo(${casa.idCasaVenta})`)
+                | Ver Información
+
+              // SECCIÓN OCULTA
+              .extra-info(id="info-" + casa.idCasaVenta)
+                hr
+                h3 Información Detallada
+                p Teléfono: #{casa.Telefono}
+                p Correo: #{casa.CorreoElectronico}
+                p País: #{casa.Pais}
+                p Ciudad: #{casa.Ciudad}
+                p Descripción: #{casa.Descripcion}
+
+                .buttons
+                  button.edit-btn(onclick=`cambiarEstado(${casa.idCasaVenta})`) Cambiar Estado
+                  button.delete-btn(onclick=`eliminarCasa(${casa.idCasaVenta})`) Eliminar
 
     script.
-      function verCasa(id) {
-        window.location.href = "/casas/" + id;
+      function toggleInfo(id) {
+        const info = document.getElementById("info-" + id);
+        info.classList.toggle("open");
       }
 
       function eliminarCasa(id) {

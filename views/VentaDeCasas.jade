@@ -40,38 +40,11 @@ html(lang="es")
             </div>
 
             <div class="form-grid">
+              
               <!-- IMAGEN -->
               <div class="form-group">
                 <label>Imagen de la casa *</label>
                 <input type="file" name="casas[${index}][Imagen]" accept="image/*" required>
-              </div>
-
-              <!-- CONTACTO -->
-              <div class="form-group">
-                <label>Teléfono *</label>
-                <input type="text" name="casas[${index}][Telefono]" placeholder="Número de teléfono" required>
-              </div>
-              
-              <!-- NOMBRE -->
-              <div class="form-group">
-                <label>Nombre *</label>
-                <input type="text" name="casas[${index}][Nombre]" placeholder="Nombre" required>
-              </div>
-
-              <!-- APELLIDOS -->
-              <div class="form-group">
-                <label>Primer Apellido *</label>
-                <input type="text" name="casas[${index}][Apellido1]" placeholder="Primer apellido" required>
-              </div>
-              <div class="form-group">
-                <label>Segundo Apellido *</label>
-                <input type="text" name="casas[${index}][Apellido2]" placeholder="Segundo apellido" required>
-              </div>
-
-              
-              <div class="form-group">
-                <label>Correo *</label>
-                <input type="email" name="casas[${index}][CorreoElectronico]" placeholder="Correo" required>
               </div>
 
               <!-- DIRECCIÓN -->
@@ -85,6 +58,7 @@ html(lang="es")
                 <label>País *</label>
                 <input type="text" name="casas[${index}][Pais]" placeholder="País" required>
               </div>
+
               <div class="form-group">
                 <label>Ciudad *</label>
                 <input type="text" name="casas[${index}][Ciudad]" placeholder="Ciudad" required>
@@ -96,19 +70,12 @@ html(lang="es")
                 <textarea name="casas[${index}][Descripcion]" placeholder="Descripción de la propiedad"></textarea>
               </div>
 
-              <!-- PRECIO Y ESTADO -->
+              <!-- PRECIO -->
               <div class="form-group">
                 <label>Precio *</label>
                 <input type="number" name="casas[${index}][Precio]" step="0.01" placeholder="0.00" required>
               </div>
-              <div class="form-group">
-                <label>Estado *</label>
-                <select name="casas[${index}][Estado]" required>
-                  <option value="venta">Venta</option>
-                  <option value="apartado">Apartado</option>
-                  <option value="vendido">Vendido</option>
-                </select>
-              </div>
+
             </div>
           </div>
         `;
@@ -129,5 +96,4 @@ html(lang="es")
         createHouseForm();
       });
 
-      // Botón para agregar más
       addBtn.addEventListener('click', createHouseForm);
