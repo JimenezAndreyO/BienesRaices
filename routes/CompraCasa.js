@@ -64,6 +64,37 @@ router.get('/MoficarCasa', function (req, res) {
 
 });
 
+router.get('/Detalle/:idCasaVenta', function (req, res) {
+
+  console.log("Entre a compra de casa detalle");
+
+  const idCasaVenta = req.params.idCasaVenta;
+
+  bd.query(
+    'CALL ObtenerCasaPorIdVenta(?)',
+    [idCasaVenta],
+    function (error, rows) {
+
+      if (error) {
+        console.error('Error al ejecutar el procedimiento:', error);
+        return res.status(500).send('Error en el servidor');
+      }
+
+      if (!rows || !rows[0] || rows[0].length === 0) {
+        return res.status(404).send('Casa no encontrada');
+      }
+
+      const casa = rows[0][0];
+
+      if (casa.Imagen) {
+        casa.Imagen = casa.Imagen.toString('base64');
+      }
+
+      res.render('MuestraDeCasaIndividual', { casa });
+    }
+  );
+});
+
 
 router.get('/EliminarCasa', function (req, res) {
 

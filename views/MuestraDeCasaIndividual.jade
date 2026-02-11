@@ -1,0 +1,123 @@
+doctype html
+html(lang="es")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    title Detalle de la Casa
+    style.
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f5f5f5;
+      }
+
+      .container {
+        width: 85%;
+        margin: 30px auto;
+        background: #fff;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 25px;
+        color: #333;
+      }
+
+      .detalle {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+      }
+
+      .imagen-container img {
+        width: 100%;
+        max-height: 350px;
+        object-fit: cover;
+        border-radius: 10px;
+      }
+
+      .info .item {
+        margin-bottom: 10px;
+        color: #555;
+      }
+
+      .info strong {
+        color: #333;
+      }
+
+      .precio {
+        font-size: 26px;
+        color: #28a745;
+        font-weight: bold;
+        margin: 15px 0;
+      }
+
+      .boton-comprar {
+        display: inline-block;
+        margin-top: 15px;
+        padding: 12px 25px;
+        background-color: #2c7be5;
+        color: #fff;
+        text-decoration: none;
+        font-size: 16px;
+        border-radius: 6px;
+        transition: background 0.3s;
+      }
+
+      .boton-comprar:hover {
+        background-color: #1a5dcc;
+      }
+
+      @media (max-width: 768px) {
+        .detalle {
+          grid-template-columns: 1fr;
+        }
+      }
+
+  body
+    .container
+      h1 Detalle de la Casa en Venta
+
+      .detalle
+        .imagen-container
+          if casa.Imagen
+            img(src=`data:image/jpeg;base64,${casa.Imagen}`, alt="Imagen de la casa")
+          else
+            p No hay imagen disponible
+
+        .info
+          .item
+            strong Dirección:
+            |  #{casa.Direccion}
+
+          .item
+            strong Ciudad:
+            |  #{casa.Ciudad}
+
+          .item
+            strong País:
+            |  #{casa.Pais}
+
+          .item
+            strong Teléfono:
+            |  #{casa.Telefono}
+
+          .item
+            strong Correo:
+            |  #{casa.CorreoElectronico}
+
+          .item
+            strong Estado:
+            |  #{casa.Estado}
+
+          .item
+            strong Descripción:
+            |  #{casa.Descripcion}
+
+          .precio
+            | ₡#{casa.Precio}
+
+          a.boton-comprar(href=`/comprar?idCasaVenta=${casa.IdCasaVenta}`)
+            | Comprar
