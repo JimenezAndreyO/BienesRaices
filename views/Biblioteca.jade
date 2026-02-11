@@ -2,9 +2,70 @@ doctype html
 html(lang="es")
   head
     meta(charset="UTF-8")
-    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    meta(
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    )
     title Biblioteca de Casas
-    link(rel="stylesheet", href="/stylesheets/styleBiblioteca.css")
+    link(
+      rel="stylesheet"
+      href="/stylesheets/styleBiblioteca.css"
+    )
+
+    style.
+      .card {
+        overflow: hidden;
+      }
+
+      .slider {
+        position: relative;
+        width: 100%;
+        height: 200px;
+      }
+
+      .slider img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        border-radius: 8px 8px 0 0;
+      }
+
+      .slider button {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(0, 0, 0, 0.55);
+        color: white;
+        border: none;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 22px;
+        line-height: 36px;
+        text-align: center;
+        padding: 0;
+        z-index: 2;
+        opacity: 0;
+        transition: opacity 0.25s ease;
+      }
+
+      .slider:hover button {
+        opacity: 1;
+      }
+
+      .slider .prev {
+        left: 10px;
+      }
+
+      .slider .next {
+        right: 10px;
+      }
+
+      .slider button:hover {
+        background: rgba(0, 0, 0, 0.8);
+      }
 
   body
     .container
@@ -15,21 +76,45 @@ html(lang="es")
       else
         each casa in casas
           .card(data-id=casa.idCasaVenta)
-            if casa.ImagenBase64
-              img.card-img(src=casa.ImagenBase64, alt="Imagen de la casa")
-            else
-              img.card-img(src="/images/sin-imagen.png", alt="Sin imagen")
 
+            // ===== SLIDER =====
+            if casa.Imagenes && casa.Imagenes.length > 0
+              .slider(
+                data-id=casa.idCasaVenta
+                data-images=JSON.stringify(casa.Imagenes)
+              )
+                img.card-img(
+                  id=`img-${casa.idCasaVenta}`
+                  src=casa.Imagenes[0]
+                  alt="Imagen de la casa"
+                )
+
+                button.prev(
+                  type="button"
+                  onclick=`prevImg(${casa.idCasaVenta})`
+                ) ‹
+
+                button.next(
+                  type="button"
+                  onclick=`nextImg(${casa.idCasaVenta})`
+                ) ›
+            else
+              img.card-img(
+                src="/images/sin-imagen.png"
+                alt="Sin imagen"
+              )
+
+            // ===== CONTENIDO =====
             .card-content
               h2 Casa #{casa.idCasaVenta}
               p Dirección: #{casa.Direccion}
               p Precio: ₡#{casa.Precio}
               p Estado: #{casa.Estado}
 
-              button.view-btn(onclick=`toggleInfo(${casa.idCasaVenta})`)
-                | Ver Información
+              button.view-btn(
+                onclick=`toggleInfo(${casa.idCasaVenta})`
+              ) Ver Información
 
-              // SECCIÓN OCULTA
               .extra-info(id="info-" + casa.idCasaVenta)
                 hr
                 h3 Información Detallada
@@ -40,8 +125,13 @@ html(lang="es")
                 p Descripción: #{casa.Descripcion}
 
                 .buttons
-                  button.edit-btn(onclick=`cambiarEstado(${casa.idCasaVenta})`) Cambiar Estado
-                  button.delete-btn(onclick=`eliminarCasa(${casa.idCasaVenta})`) Eliminar
+                  button.edit-btn(
+                    onclick=`cambiarEstado(${casa.idCasaVenta})`
+                  ) Cambiar Estado
+
+                  button.delete-btn(
+                    onclick=`eliminarCasa(${casa.idCasaVenta})`
+                  ) Eliminar
 
     script.
       function toggleInfo(id) {
@@ -52,7 +142,9 @@ html(lang="es")
       function eliminarCasa(id) {
         if (!confirm("¿Seguro que deseas eliminar esta casa?")) return;
 
-        fetch("/CompraCasa/EliminarCasa/" + id, { method: "DELETE" })
+        fetch(`/CompraCasa/EliminarCasa/${id}`, {
+          method: "DELETE"
+        })
           .then(res => res.json())
           .then(data => {
             alert(data.mensaje);
@@ -61,10 +153,34 @@ html(lang="es")
       }
 
       function cambiarEstado(id) {
-        fetch("/CompraCasa/ModificarCasa/" + id, { method: "PUT" })
+        fetch(`/CompraCasa/ModificarCasa/${id}`, {
+          method: "PUT"
+        })
           .then(res => res.json())
           .then(data => {
             alert(data.mensaje);
             location.reload();
           });
+      }
+
+      function nextImg(id) {
+        const slider = document.querySelector(`.slider[data-id="${id}"]`);
+        const images = JSON.parse(slider.dataset.images);
+        let index = parseInt(slider.dataset.index || 0);
+
+        index = (index + 1) % images.length;
+        slider.dataset.index = index;
+
+        document.getElementById(`img-${id}`).src = images[index];
+      }
+
+      function prevImg(id) {
+        const slider = document.querySelector(`.slider[data-id="${id}"]`);
+        const images = JSON.parse(slider.dataset.images);
+        let index = parseInt(slider.dataset.index || 0);
+
+        index = (index - 1 + images.length) % images.length;
+        slider.dataset.index = index;
+
+        document.getElementById(`img-${id}`).src = images[index];
       }

@@ -31,6 +31,12 @@ app.use(session({
   cookie: { secure: false } // usa true solo si usas HTTPS
 }));
 
+app.use((req, res, next) => {
+  res.locals.IdPersona = req.session.IdPersona;
+  res.locals.NombreRol = req.session.NombreRol;
+  next();
+});
+
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);

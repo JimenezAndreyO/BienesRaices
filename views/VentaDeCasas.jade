@@ -2,98 +2,160 @@ doctype html
 html(lang="es")
   head
     meta(charset="UTF-8")
-    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    meta(
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    )
     title Agregar Casas en Venta
-    link(rel="stylesheet" href="/stylesheets/StyleVentas.css")
+    link(
+      rel="stylesheet"
+      href="/stylesheets/StyleVentas.css"
+    )
+
+    style.
+      .images-container {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+
+      .image-preview {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #ccc;
+      }
+
+      .image-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .add-image-btn {
+        width: 120px;
+        height: 120px;
+        border: 2px dashed #999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 40px;
+        color: #777;
+        border-radius: 8px;
+      }
+
+      .hidden-file {
+        display: none;
+      }
 
   body
     .container
       header
-        h1 Agregar Casas en Venta
+        h1 Agregar Casa en Venta
 
       .content
-        form#mainForm(action="/CompraCasa/RegistroCasa" method="POST" enctype="multipart/form-data")
-          #houses-container
+        form#mainForm(
+          action="/CompraCasa/RegistroCasa"
+          method="POST"
+          enctype="multipart/form-data"
+        )
+          .house-form
+            .house-title
+              span Datos de la Casa
 
-          button.add-house-btn#add-house(type="button")
-            svg(fill="none" stroke="currentColor" viewBox="0 0 24 24")
-              path(stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4")
-            | Agregar Otra Casa
+            .form-grid
 
-          button.submit-btn(type="submit") Guardar Todas las Casas
+              // ======================
+              // IMÁGENES
+              // ======================
+              .form-group.full-width
+                label Imágenes de la casa *
 
-    // JavaScript para agregar casas dinámicamente
+                input.hidden-file(
+                  type="file"
+                  id="imagenes"
+                  name="imagenes"
+                  accept="image/*"
+                  multiple
+                  onchange="previewImages(event)"
+                )
+
+                .images-container#images-container
+                  .add-image-btn(onclick="openFile()") +
+
+              // ======================
+              // DIRECCIÓN
+              // ======================
+              .form-group.full-width
+                label Dirección *
+                input(
+                  type="text"
+                  name="Direccion"
+                  required
+                )
+
+              .form-group
+                label País *
+                input(
+                  type="text"
+                  name="Pais"
+                  required
+                )
+
+              .form-group
+                label Ciudad *
+                input(
+                  type="text"
+                  name="Ciudad"
+                  required
+                )
+
+              .form-group.full-width
+                label Descripción
+                textarea(name="Descripcion")
+
+              .form-group
+                label Precio *
+                input(
+                  type="number"
+                  name="Precio"
+                  step="0.01"
+                  required
+                )
+
+          button.submit-btn(type="submit") Guardar Casa
+
     script.
-      const container = document.getElementById('houses-container');
-      const addBtn = document.getElementById('add-house');
-      let houseCount = 0;
+      let allFiles = [];
 
-      function createHouseForm() {
-        houseCount++;
-        const index = houseCount;
-
-        const formHTML = `
-          <div class="house-form" data-index="${index}">
-            <div class="house-title">
-              <span>Casa #${index}</span>
-              <button type="button" class="remove-house" onclick="removeHouse(this)">X</button>
-            </div>
-
-            <div class="form-grid">
-              
-              <!-- IMAGEN -->
-              <div class="form-group">
-                <label>Imagen de la casa *</label>
-                <input type="file" name="casas[${index}][Imagen]" accept="image/*" required>
-              </div>
-
-              <!-- DIRECCIÓN -->
-              <div class="form-group full-width">
-                <label>Dirección *</label>
-                <input type="text" name="casas[${index}][Direccion]" placeholder="Dirección exacta" required>
-              </div>
-
-              <!-- UBICACIÓN -->
-              <div class="form-group">
-                <label>País *</label>
-                <input type="text" name="casas[${index}][Pais]" placeholder="País" required>
-              </div>
-
-              <div class="form-group">
-                <label>Ciudad *</label>
-                <input type="text" name="casas[${index}][Ciudad]" placeholder="Ciudad" required>
-              </div>
-
-              <!-- DESCRIPCIÓN -->
-              <div class="form-group full-width">
-                <label>Descripción</label>
-                <textarea name="casas[${index}][Descripcion]" placeholder="Descripción de la propiedad"></textarea>
-              </div>
-
-              <!-- PRECIO -->
-              <div class="form-group">
-                <label>Precio *</label>
-                <input type="number" name="casas[${index}][Precio]" step="0.01" placeholder="0.00" required>
-              </div>
-
-            </div>
-          </div>
-        `;
-
-        const div = document.createElement('div');
-        div.innerHTML = formHTML;
-        container.appendChild(div.firstElementChild);
+      function openFile() {
+        document.getElementById('imagenes').click();
       }
 
-      function removeHouse(btn) {
-        const form = btn.closest('.house-form');
-        form.classList.add('removing');
-        setTimeout(() => form.remove(), 300);
+      function previewImages(event) {
+        const newFiles = Array.from(event.target.files);
+        const container = document.getElementById('images-container');
+        const addBtn = container.querySelector('.add-image-btn');
+
+        newFiles.forEach(file => {
+          allFiles.push(file);
+
+          const reader = new FileReader();
+          reader.onload = e => {
+            const div = document.createElement('div');
+            div.className = 'image-preview';
+            div.innerHTML = '<img src="' + e.target.result + '">';
+            container.insertBefore(div, addBtn);
+          };
+          reader.readAsDataURL(file);
+        });
+
+        // 🔥 Reinyectar TODAS las imágenes al input
+        const dataTransfer = new DataTransfer();
+        allFiles.forEach(file => dataTransfer.items.add(file));
+        event.target.files = dataTransfer.files;
       }
-
-      // Cargar primera casa al iniciar
-      window.addEventListener('load', () => {
-        createHouseForm();
-      });
-
-      addBtn.addEventListener('click', createHouseForm);

@@ -4,33 +4,81 @@ html(lang="es")
     meta(charset="UTF-8")
     meta(name="viewport" content="width=device-width, initial-scale=1")
     title Bienes Raíces
-    link(rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css")
-    link(rel="stylesheet" href="StyleHome.css")
-    script(src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous")
+
+    link(
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    )
+    link(rel="stylesheet" href="/StyleHome.css")
+    script(
+      src="https://kit.fontawesome.com/a076d05399.js"
+      crossorigin="anonymous"
+    )
 
   body
-    // Navbar
+
+    // ================= NAVBAR =================
     nav.navbar.navbar-expand-lg.navbar-dark.bg-dark
       .container
-        a.navbar-brand(href="#") BienesRaíces
-        button.navbar-toggler(type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav")
+        a.navbar-brand(href="/") BienesRaíces
+
+        button.navbar-toggler(
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        )
           span.navbar-toggler-icon
+
         .collapse.navbar-collapse#navbarNav
           ul.navbar-nav.ms-auto
-            li.nav-item
-              a.nav-link.text-white(href="/Usuarios/InicioPersona", class="enlace")
-                i.fas.fa-info-circle.mr-1
-                | Inicio
-            li.nav-item
-              a.nav-link.text-white(href="/Usuarios/Registro", class="enlace")
-                i.fas.fa-info-circle.mr-1
-                | Login
-            li.nav-item
-              a.nav-link.text-white(href="/Notas/altatiket", class="enlace")
-                i.fas.fa-info-circle.mr-1
-                | Contactanos
+            if IdPersona
+              li.nav-item
+                a.nav-link.text-white(
+                  href=NombreRol === 'Administrador' 
+                    ? "/Usuarios/InicioAdministrador" 
+                    : NombreRol === 'Vendedor'
+                      ? "/Usuarios/InicioDeVendedor"
+                      : "/Usuarios/InicioPersona"
+                )
+                  i.fas.fa-home.me-1
+                  | Inicio 
 
-    // Hero Section
+              if NombreRol === 'Vendedor'
+                li.nav-item
+                  a.nav-link.text-white(href="/CompraCasa/CargarBiblioteca")
+                    i.fas.fa-book.me-1
+                    | Biblioteca 
+
+                li.nav-item
+                  a.nav-link.text-white(href="/CompraCasa/CargarCasas")
+                    i.fas.fa-home.me-1
+                    | Venta de Casas 
+
+              if NombreRol === 'Administrador'
+                li.nav-item
+                  a.nav-link.text-white(href="/Usuarios/GestionUsuarios")
+                    i.fas.fa-users.me-1
+                    | Gestión Usuarios
+
+              li.nav-item
+                a.nav-link.text-white(href="/Usuarios/CerrarSesion")
+                  i.fas.fa-sign-out-alt.me-1
+                  | Cerrar sesión
+            else
+              li.nav-item
+                a.nav-link.text-white(href="/")
+                  | Inicio
+
+              li.nav-item
+                a.nav-link.text-white(href="/Usuarios/Registro")
+                  | Login
+
+              li.nav-item
+                a.nav-link.text-white(href="/Notas/altatiket")
+                  | Contáctanos
+
+
+    // ================= HERO =================
     .hero
       .hero-overlay
       .container.position-relative.text-center
@@ -38,27 +86,7 @@ html(lang="es")
         p Las mejores propiedades al mejor precio
 
 
-    .container.mt-4
-      form(method="GET" action="/" class="p-4 shadow rounded bg-light")
-        .row.g-3
-          .col-md-3
-            label.form-label Ciudad
-            input.form-control(type="text" name="ciudad" value=(typeof ciudad !== 'undefined' ? ciudad : '') placeholder="Ej: San José")
-          .col-md-3
-            label.form-label País
-            input.form-control(type="text" name="pais" value=(typeof pais !== 'undefined' ? pais : '') placeholder="Ej: Costa Rica")
-          .col-md-2
-            label.form-label Precio mínimo
-            input.form-control(type="number" name="precioMin" min="0")
-          .col-md-2
-            label.form-label Precio máximo
-            input.form-control(type="number" name="precioMax" min="0")
-          .col-md-2.d-flex.align-items-end
-            button.btn.btn-primary.w-100(type="submit") Buscar
-
-    // ===========================
-    // CARRUSEL ÚLTIMAS 5 CASAS
-    // ===========================
+    // ================= CARRUSEL =================
     if ultimas && ultimas.length > 0
       .container.mt-5
         h2.text-center.mb-4 Últimas propiedades en venta
@@ -73,23 +101,35 @@ html(lang="es")
               .carousel-item(class=(i === 0 ? "active" : ""))
                 if casa.ImagenBase64
                   img.d-block.w-100(
-                    src=`data:image/jpeg;base64,${casa.ImagenBase64}`
+                    src=casa.ImagenBase64
                     style="height:420px; object-fit:cover"
                   )
                 else
-                  img.d-block.w-100(src="/img/no-image.jpg" style="height:420px; object-fit:cover")
+                  img.d-block.w-100(
+                    src="/img/no-image.jpg"
+                    style="height:420px; object-fit:cover"
+                  )
 
                 .carousel-caption.bg-dark.bg-opacity-50.p-2.rounded
                   h4= casa.Direccion
                   p ₡#{casa.Precio}
 
-          // CONTROLES DEL CARRUSEL
-          button.carousel-control-prev(type="button" data-bs-target="#carouselUltimas" data-bs-slide="prev")
+          button.carousel-control-prev(
+            type="button"
+            data-bs-target="#carouselUltimas"
+            data-bs-slide="prev"
+          )
             span.carousel-control-prev-icon
-          button.carousel-control-next(type="button" data-bs-target="#carouselUltimas" data-bs-slide="next")
+
+          button.carousel-control-next(
+            type="button"
+            data-bs-target="#carouselUltimas"
+            data-bs-slide="next"
+          )
             span.carousel-control-next-icon
 
 
+    // ================= TODAS LAS PROPIEDADES =================
     .container.mt-5
       h2.text-center.mb-4 Todas las propiedades
 
@@ -100,12 +140,15 @@ html(lang="es")
               .card.shadow-sm
                 if casa.ImagenBase64
                   img.card-img-top(
-                    src=`data:image/jpeg;base64,${casa.ImagenBase64}`
+                    src=casa.ImagenBase64
                     alt="Imagen de la casa"
-                    style="height: 220px; object-fit: cover;"
+                    style="height:220px; object-fit:cover;"
                   )
                 else
-                  img.card-img-top(src="/img/no-image.jpg", alt="Sin imagen")
+                  img.card-img-top(
+                    src="/img/no-image.jpg"
+                    alt="Sin imagen"
+                  )
 
                 .card-body
                   h5.card-title= casa.Direccion
@@ -114,12 +157,18 @@ html(lang="es")
                     strong Precio:
                     |  ₡#{casa.Precio}
 
-                  a.btn.btn-primary(href=`/CompraCasa/Detalle/${casa.idCasaVenta}`) Ver más
+                  a.btn.btn-primary(
+                    href=`/CompraCasa/Detalle/${casa.idCasaVenta}`
+                  ) Ver más
       else
         p.text-center No hay propiedades en venta por el momento.
 
-    // Footer
-    footer.mt-5
-      p © 2025 Bienes Raíces - Todos los derechos reservados
 
-    script(src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js")
+    // ================= FOOTER =================
+    footer.mt-5.text-center.py-4.bg-dark.text-white
+      p.mb-0 © 2025 Bienes Raíces - Todos los derechos reservados
+
+
+    script(
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+    )

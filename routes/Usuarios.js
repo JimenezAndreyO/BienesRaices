@@ -26,60 +26,90 @@ router.get('/InicioAdministrador', function (req, res, next) {
 
 router.get('/InicioPersona', function (req, res, next) {
 
+ 
 
-  // Filtros recibidos del usuario
-  const { ciudad, pais, precioMin, precioMax } = req.query;
+ const { ciudad, pais, precioMin, precioMax } = req.query;
 
-  let filtroSQL = "WHERE Estado = 'venta'";
+  let filtroSQL = "WHERE c.Estado = 'venta'";
   let params = [];
 
   if (ciudad) {
-    filtroSQL += " AND Ciudad LIKE ?";
+    filtroSQL += " AND c.Ciudad LIKE ?";
     params.push(`%${ciudad}%`);
   }
 
   if (pais) {
-    filtroSQL += " AND Pais LIKE ?";
+    filtroSQL += " AND c.Pais LIKE ?";
     params.push(`%${pais}%`);
   }
 
   if (precioMin) {
-    filtroSQL += " AND Precio >= ?";
+    filtroSQL += " AND c.Precio >= ?";
     params.push(precioMin);
   }
 
   if (precioMax) {
-    filtroSQL += " AND Precio <= ?";
+    filtroSQL += " AND c.Precio <= ?";
     params.push(precioMax);
   }
 
+  // 🔥 Trae UNA imagen (BLOB) por casa
+  const baseQuery = `
+    SELECT 
+      c.*,
+      (
+        SELECT Imagen
+        FROM CasaImagenes
+        WHERE idCasaVenta = c.idCasaVenta
+        ORDER BY idImagen ASC
+        LIMIT 1
+      ) AS Imagen
+    FROM CasasVentas c
+  `;
+
   const sqlUltimas = `
-    SELECT * FROM CasasVentas 
-    WHERE Estado = 'venta'
-    ORDER BY idCasaVenta DESC
+    ${baseQuery}
+    WHERE c.Estado = 'venta'
+    ORDER BY c.idCasaVenta DESC
     LIMIT 5
   `;
 
   const sqlTodas = `
-    SELECT * FROM CasasVentas 
+    ${baseQuery}
     ${filtroSQL}
-    ORDER BY idCasaVenta DESC
+    ORDER BY c.idCasaVenta DESC
   `;
 
-  // Consultar últimas 5
+  // Últimas 5 casas
   bd.query(sqlUltimas, (err, ultimas) => {
-    if (err) return res.status(500).send("Error cargando últimas casas");
+    if (err) {
+      console.error(err);
+      return res.status(500).send("Error cargando últimas casas");
+    }
 
-    // Consultar todas
+    // Todas las casas
     bd.query(sqlTodas, params, (err, todas) => {
-      if (err) return res.status(500).send("Error cargando casas");
+      if (err) {
+        console.error(err);
+        return res.status(500).send("Error cargando casas");
+      }
 
-      // Convertir BLOB a Base64
+      // 🔥 Convertir BLOB a Base64 correctamente
       const procesar = lista =>
-        lista.map(c => ({
-          ...c,
-          ImagenBase64: c.Imagen ? Buffer.from(c.Imagen).toString("base64") : null
-        }));
+        lista.map(c => {
+
+          let imagenBase64 = null;
+
+          if (c.Imagen && Buffer.isBuffer(c.Imagen)) {
+            const base64 = c.Imagen.toString('base64');
+            imagenBase64 = `data:image/jpeg;base64,${base64}`;
+          }
+
+          return {
+            ...c,
+            ImagenBase64: imagenBase64
+          };
+        });
 
       res.render('index', {
         title: "Bienes Raíces",
@@ -88,18 +118,15 @@ router.get('/InicioPersona', function (req, res, next) {
       });
     });
   });
-
-
-
-
-
 });
+
+
 
 router.get('/InicioDeVendedor', function (req, res, next) {
 
-
-
   // Filtros recibidos del usuario
+
+  console.log("Ingrese a inicio de vendedor")
   const { ciudad, pais, precioMin, precioMax } = req.query;
 
   let filtroSQL = "WHERE Estado = 'venta'";
@@ -125,47 +152,73 @@ router.get('/InicioDeVendedor', function (req, res, next) {
     params.push(precioMax);
   }
 
+  // 🔥 Trae UNA imagen (BLOB) por casa
+  const baseQuery = `
+    SELECT 
+      c.*,
+      (
+        SELECT Imagen
+        FROM CasaImagenes
+        WHERE idCasaVenta = c.idCasaVenta
+        ORDER BY idImagen ASC
+        LIMIT 1
+      ) AS Imagen
+    FROM CasasVentas c
+  `;
+
   const sqlUltimas = `
-    SELECT * FROM CasasVentas 
-    WHERE Estado = 'venta'
-    ORDER BY idCasaVenta DESC
+    ${baseQuery}
+    WHERE c.Estado = 'venta'
+    ORDER BY c.idCasaVenta DESC
     LIMIT 5
   `;
 
   const sqlTodas = `
-    SELECT * FROM CasasVentas 
+    ${baseQuery}
     ${filtroSQL}
-    ORDER BY idCasaVenta DESC
+    ORDER BY c.idCasaVenta DESC
   `;
 
-  // Consultar últimas 5
+  // Últimas 5 casas
   bd.query(sqlUltimas, (err, ultimas) => {
-    if (err) return res.status(500).send("Error cargando últimas casas");
+    if (err) {
+      console.error(err);
+      return res.status(500).send("Error cargando últimas casas");
+    }
 
-    // Consultar todas
+    // Todas las casas
     bd.query(sqlTodas, params, (err, todas) => {
-      if (err) return res.status(500).send("Error cargando casas");
+      if (err) {
+        console.error(err);
+        return res.status(500).send("Error cargando casas");
+      }
 
-      // Convertir BLOB a Base64
+      // 🔥 Convertir BLOB a Base64 correctamente
       const procesar = lista =>
-        lista.map(c => ({
-          ...c,
-          ImagenBase64: c.Imagen ? Buffer.from(c.Imagen).toString("base64") : null
-        }));
+        lista.map(c => {
 
-      res.render('InicioDeVendedor', {
+          let imagenBase64 = null;
+
+          if (c.Imagen && Buffer.isBuffer(c.Imagen)) {
+            const base64 = c.Imagen.toString('base64');
+            imagenBase64 = `data:image/jpeg;base64,${base64}`;
+          }
+
+          return {
+            ...c,
+            ImagenBase64: imagenBase64
+          };
+        });
+
+      res.render('index', {
         title: "Bienes Raíces",
         ultimas: procesar(ultimas),
         casas: procesar(todas)
       });
     });
   });
-
-
-
-
-
 });
+
 
 router.get('/Error', function (req, res, next) {
   res.render('error');
@@ -224,22 +277,21 @@ router.post('/RegistroPersonas', async function (req, res, next) {
 
 //Manejo de de inicio se sesion 
 
-
 router.post('/InicioSesion', function (req, res, next) {
+
   const usuario = req.body.usuario;
   const contrasena = req.body.contrasena;
 
   bd.query('CALL ObtenerTipoUsuario(?, ?)', [usuario, contrasena], function (error, rows) {
+
     if (error) {
       console.error('Error al ejecutar el procedimiento almacenado:', error);
-      res.status(500).send('Error en el servidor');
-      return;
+      return res.status(500).send('Error en el servidor');
     }
 
     if (!rows || !rows[0] || !rows[0][0]) {
       console.error("Resultado inesperado del procedimiento almacenado");
-      res.redirect('/Usuarios/Error');
-      return;
+      return res.redirect('/Usuarios/Error');
     }
 
     const resultado = rows[0][0].Resultado;
@@ -248,30 +300,45 @@ router.post('/InicioSesion', function (req, res, next) {
     const NombreRol = rows[0][0].NombreRol;
 
     if (resultado === 'Usuario y contraseña correctos') {
+
+      // Guardar datos en sesión
       req.session.IdPersona = IdPersona;
       req.session.IdRol = IdRol;
       req.session.NombreRol = NombreRol;
 
       console.log(`Inicio de sesión exitoso: ID=${IdPersona}, Rol=${NombreRol}`);
 
-      switch (NombreRol) {
-        case 'Administrador':
-          res.redirect('/Usuarios/InicioAdministrador');
-          break;
-        case 'Vendedor':
-          res.redirect('/Usuarios/InicioDeVendedor');
-          break;
-        case 'Persona':
-          res.redirect('/Usuarios/InicioPersona');
-          break;
-        default:
-          res.redirect('/Usuarios/Registro');
-          break;
-      }
+      // 🔥 IMPORTANTE: esperar que la sesión se guarde
+      req.session.save(function (err) {
+
+        if (err) {
+          console.error("Error al guardar la sesión:", err);
+          return res.redirect('/Usuarios/Error');
+        }
+
+        // Redirigir según rol
+        switch (NombreRol) {
+          case 'Administrador':
+            return res.redirect('/Usuarios/InicioAdministrador');
+
+          case 'Vendedor':
+            return res.redirect('/Usuarios/InicioDeVendedor');
+
+          case 'Persona':
+            return res.redirect('/Usuarios/InicioPersona');
+
+          default:
+            return res.redirect('/Usuarios/Registro');
+        }
+
+      });
+
     } else {
-      res.redirect('/Usuarios/Error');
+      return res.redirect('/Usuarios/Error');
     }
+
   });
+
 });
 
 

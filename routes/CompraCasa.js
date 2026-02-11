@@ -2,12 +2,20 @@ const express = require('express');
 const router = express.Router();
 var bd = require('./bd');
 require('dotenv').config();
-
 const multer = require('multer');
 
-
 const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+
+const upload = multer({
+  storage,
+  limits: {
+    files: 20
+  }
+});
+
+
+module.exports = router;
+
 
 router.get('/CargarCasas', function (req, res, next) {
   res.render('VentaDeCasas');
@@ -19,170 +27,242 @@ router.get('/CargarBiblioteca', function (req, res) {
     const idPersona = req.session.IdPersona;
 
     if (!idPersona) {
-        console.log("No hay sesión activa");
         return res.redirect("/Usuarios/InicioSesion");
     }
 
-    bd.query("CALL MostrarCasasPorPersona(?)", [idPersona], (err, rows) => {
+    // 1️⃣ Traer casas
+    bd.query(
+      "SELECT * FROM CasasVentas WHERE idPersona = ?",
+      [idPersona],
+      function (err, casas) {
 
         if (err) {
-            console.log(err);
-            return res.status(500).send("Error en la BD");
+            console.error(err);
+            return res.status(500).send("Error cargando casas.");
         }
 
-        let casas = rows && rows[0] ? rows[0] : [];
+        if (casas.length === 0) {
+            return res.render("Biblioteca", { casas: [] });
+        }
 
-        // Convertir imágenes a base64
-        casas = casas.map(casa => ({
-            ...casa,
-            ImagenBase64: casa.Imagen
-                ? `data:image/jpeg;base64,${casa.Imagen.toString("base64")}`
-                : null
-        }));
+        // 2️⃣ Traer imágenes por casa
+        const ids = casas.map(c => c.idCasaVenta);
 
-        console.log("📦 Casas encontradas:", casas.length);
+        bd.query(
+          `SELECT idCasaVenta, Imagen FROM CasaImagenes
+           WHERE idCasaVenta IN (?)`,
+          [ids],
+          function (err, imagenes) {
 
-        res.render("Biblioteca", { casas });
+            if (err) {
+                console.error(err);
+                return res.status(500).send("Error cargando imágenes.");
+            }
+
+            // 3️⃣ Agrupar imágenes por casa
+            const map = {};
+            imagenes.forEach(img => {
+                if (!map[img.idCasaVenta]) {
+                    map[img.idCasaVenta] = [];
+                }
+                map[img.idCasaVenta].push(
+                    `data:image/jpeg;base64,${img.Imagen.toString('base64')}`
+                );
+            });
+
+            // 4️⃣ Asignar imágenes a cada casa
+            casas = casas.map(casa => ({
+                ...casa,
+                Imagenes: map[casa.idCasaVenta] || []
+            }));
+
+            console.log("🧪 DEBUG IMAGENES:");
+            casas.forEach(c => {
+              console.log(
+                "Casa:", c.idCasaVenta,
+                "imagenes:", c.Imagenes?.length,
+                c.Imagenes?.[0]?.substring(0, 30)
+              );
+            });
+
+
+            res.render("Biblioteca", { casas });
+        });
     });
-
 });
 
 
-router.get('/MoficarCasa', function (req, res) {
+
+// MODIFICAR
+router.put('/ModificarCasa/:id', function (req, res) {
 
     const idPersona = req.session.IdPersona;
+    const idCasa = req.params.id;
+    const nuevoEstado = "Vendida"
 
     if (!idPersona) {
-        console.log("No hay sesión activa");
-        return res.redirect("/Usuarios/InicioSesion");
+        return res.status(401).json({ mensaje: "No hay sesión activa" });
     }
 
-    bd.query("CALL EditarEstadoCasa(?)", [idPersona], (err, rows) => {
+   bd.query(
+        "CALL EditarEstadoCasa(?, ?, ?)",
+        [idCasa, idPersona, nuevoEstado],
+        (err) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ mensaje: "Error al modificar el estado" });
+            }
 
-      
+            res.json({ mensaje: "Estado actualizado correctamente" });
     });
+});
 
+// ELIMINAR
+router.delete('/EliminarCasa/:id', function (req, res) {
+
+    const idPersona = req.session.IdPersona;
+    const idCasaVenta = req.params.id;
+
+    console.log("Ingresamos en el delete", idCasaVenta, idPersona);
+
+    if (!idPersona) {
+        return res.status(401).json({ mensaje: "No hay sesión activa" });
+    }
+
+    bd.query(
+        "CALL EliminarCasa(?, ?)",
+        [idCasaVenta, idPersona],
+        (err) => {
+            if (err) {
+                console.error("Error SP EliminarCasa:", err);
+                return res.status(500).json({ mensaje: "Error al eliminar la casa" });
+            }
+
+            res.json({ mensaje: "Casa eliminada correctamente" });
+        }
+    );
 });
 
 router.get('/Detalle/:idCasaVenta', function (req, res) {
 
-  console.log("Entre a compra de casa detalle");
-
   const idCasaVenta = req.params.idCasaVenta;
 
+  Console.log("Ingrese a DEtalle")
+  // 1️⃣ Obtener la casa
   bd.query(
-    'CALL ObtenerCasaPorIdVenta(?)',
+    'SELECT * FROM CasasVentas WHERE idCasaVenta = ?',
     [idCasaVenta],
-    function (error, rows) {
+    function (err, casas) {
 
-      if (error) {
-        console.error('Error al ejecutar el procedimiento:', error);
-        return res.status(500).send('Error en el servidor');
+      if (err) {
+        console.error(err);
+        return res.status(500).send("Error al cargar la casa");
       }
 
-      if (!rows || !rows[0] || rows[0].length === 0) {
-        return res.status(404).send('Casa no encontrada');
+      if (!casas || casas.length === 0) {
+        return res.status(404).send("Casa no encontrada");
       }
 
-      const casa = rows[0][0];
+      const casa = casas[0];
 
-      if (casa.Imagen) {
-        casa.Imagen = casa.Imagen.toString('base64');
-      }
+      // 2️⃣ Obtener TODAS las imágenes de esa casa
+      bd.query(
+        'SELECT Imagen FROM CasaImagenes WHERE idCasaVenta = ?',
+        [idCasaVenta],
+        function (err, imagenes) {
 
-      res.render('MuestraDeCasaIndividual', { casa });
+          console.log("🧪 RAW imagenes:", imagenes);
+    console.log("🧪 Cantidad imagenes:", imagenes?.length);
+
+          if (err) {
+            console.error(err);
+            return res.status(500).send("Error al cargar imágenes");
+          }
+
+          // 3️⃣ Convertir imágenes a Base64
+          casa.Imagenes = imagenes.map(img =>
+            `data:image/jpeg;base64,${img.Imagen.toString('base64')}`
+          );
+
+          console.log("📸 Imágenes encontradas:", casa.Imagenes.length);
+
+          // 4️⃣ Enviar al Jade
+          res.render('MuestraDeCasaIndividual', { casa });
+        }
+      );
     }
   );
 });
 
 
-router.get('/EliminarCasa', function (req, res) {
-
-    const idPersona = req.session.IdPersona;
-
-    if (!idPersona) {
-        console.log("No hay sesión activa");
-        return res.redirect("/Usuarios/InicioSesion");
-    }
-
-    bd.query("CALL EliminarCasa(?)", [idPersona], (err, rows) => {
-
-      
-    });
-
-});
-router.post('/RegistroCasa', upload.any(), function (req, res) {
+router.post(
+  '/RegistroCasa',
+  upload.array('imagenes', 20),
+  async function (req, res) {
 
     if (!req.session.IdPersona) {
-        return res.status(401).send("Debe iniciar sesión para registrar una casa.");
+        return res.status(401).send("Debe iniciar sesión.");
     }
 
     const idPersona = req.session.IdPersona;
-
-    let casas = req.body.casas;
     const files = req.files;
 
-    if (!casas) {
-        return res.status(400).send("No se enviaron casas.");
+    console.log("🧪 req.files:", files);
+    console.log("🧪 cantidad:", files?.length);
+
+
+    const { Direccion, Pais, Ciudad, Descripcion, Precio } = req.body;
+
+    if (!files || files.length === 0) {
+        return res.status(400).send("Debe subir al menos una imagen.");
     }
 
-    // Convertir objeto a array real
-    casas = Object.keys(casas).map(k => casas[k]);
+    if (!Direccion || !Pais || !Ciudad || !Precio) {
+        return res.status(400).send("Faltan datos obligatorios.");
+    }
 
-    // Asignar imágenes según su índice
-    files.forEach(file => {
-        const match = file.fieldname.match(/casas\[(\d+)\]\[Imagen\]/);
-        if (match) {
-            const index = parseInt(match[1]) - 1;
-            if (casas[index]) {
-                casas[index].Imagen = file.buffer; // Guardar BLOB
-            }
-        }
-    });
+    try {
+        // 1️⃣ Obtener correo
+        const [persona] = await bd.promise().query(
+            'SELECT Correo FROM Persona WHERE idPersona = ?',
+            [idPersona]
+        );
 
-    let casasProcesadas = 0;
-
-    casas.forEach((casa, index) => {
-
-        // Validar imagen
-        if (!casa.Imagen) {
-            return res.status(400).send(`Falta la imagen en la casa #${index + 1}`);
+        if (persona.length === 0) {
+            return res.status(500).send("Usuario no encontrado.");
         }
 
-        // El SP recibe SOLO estos parámetros:
-        // p_idPersona, p_Imagen, p_Direccion, p_Pais, p_Ciudad, p_Descripcion, p_Precio
-        const sql = `CALL sp_InsertarCasaVenta(?, ?, ?, ?, ?, ?, ?)`;
+        const correo = persona[0].Correo;
 
-        const parametros = [
-            idPersona,
-            casa.Imagen,
-            casa.Direccion,
-            casa.Pais,
-            casa.Ciudad,
-            casa.Descripcion || "",
-            casa.Precio
-        ];
+        // 2️⃣ Insertar casa
+        const [result] = await bd.promise().query(
+          `INSERT INTO CasasVentas
+           (idPersona, CorreoElectronico, Direccion, Pais, Ciudad, Descripcion, Precio, Estado)
+           VALUES (?, ?, ?, ?, ?, ?, ?, 'venta')`,
+          [idPersona, correo, Direccion, Pais, Ciudad, Descripcion || '', Precio]
+        );
 
-        bd.query(sql, parametros, function (err) {
+        const idCasaVenta = result.insertId;
 
-            if (err) {
-                console.error("❌ Error al insertar casa:", err.sqlMessage || err);
-                return res.status(500).send("Error insertando casa en la BD.");
-            }
+        // 3️⃣ Insertar imágenes (todas)
+        const sqlImagen = `
+          INSERT INTO CasaImagenes (idCasaVenta, Imagen)
+          VALUES (?, ?)
+        `;
 
-            casasProcesadas++;
+        const inserts = files.map(file =>
+          bd.promise().query(sqlImagen, [idCasaVenta, file.buffer])
+        );
 
-            if (casasProcesadas === casas.length) {
-                return res.redirect("/CompraCasa/CargarBiblioteca");
-            }
+        await Promise.all(inserts);
 
-        });
+        res.redirect("/CompraCasa/CargarBiblioteca");
 
-    });
-
+    } catch (err) {
+        console.error("❌ Error registro casa:", err);
+        res.status(500).send("Error registrando casa.");
+    }
 });
-
-
 
 
 

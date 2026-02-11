@@ -3,61 +3,90 @@ var router = express.Router();
 var bd = require('./bd');
 
 // Página Principal
-router.get('/', function(req, res) {
+router.get('/', function (req, res) {
 
-  // Filtros recibidos del usuario
   const { ciudad, pais, precioMin, precioMax } = req.query;
 
-  let filtroSQL = "WHERE Estado = 'venta'";
+  let filtroSQL = "WHERE c.Estado = 'venta'";
   let params = [];
 
   if (ciudad) {
-    filtroSQL += " AND Ciudad LIKE ?";
+    filtroSQL += " AND c.Ciudad LIKE ?";
     params.push(`%${ciudad}%`);
   }
 
   if (pais) {
-    filtroSQL += " AND Pais LIKE ?";
+    filtroSQL += " AND c.Pais LIKE ?";
     params.push(`%${pais}%`);
   }
 
   if (precioMin) {
-    filtroSQL += " AND Precio >= ?";
+    filtroSQL += " AND c.Precio >= ?";
     params.push(precioMin);
   }
 
   if (precioMax) {
-    filtroSQL += " AND Precio <= ?";
+    filtroSQL += " AND c.Precio <= ?";
     params.push(precioMax);
   }
 
+  // 🔥 Trae UNA imagen (BLOB) por casa
+  const baseQuery = `
+    SELECT 
+      c.*,
+      (
+        SELECT Imagen
+        FROM CasaImagenes
+        WHERE idCasaVenta = c.idCasaVenta
+        ORDER BY idImagen ASC
+        LIMIT 1
+      ) AS Imagen
+    FROM CasasVentas c
+  `;
+
   const sqlUltimas = `
-    SELECT * FROM CasasVentas 
-    WHERE Estado = 'venta'
-    ORDER BY idCasaVenta DESC
+    ${baseQuery}
+    WHERE c.Estado = 'venta'
+    ORDER BY c.idCasaVenta DESC
     LIMIT 5
   `;
 
   const sqlTodas = `
-    SELECT * FROM CasasVentas 
+    ${baseQuery}
     ${filtroSQL}
-    ORDER BY idCasaVenta DESC
+    ORDER BY c.idCasaVenta DESC
   `;
 
-  // Consultar últimas 5
+  // Últimas 5 casas
   bd.query(sqlUltimas, (err, ultimas) => {
-    if (err) return res.status(500).send("Error cargando últimas casas");
+    if (err) {
+      console.error(err);
+      return res.status(500).send("Error cargando últimas casas");
+    }
 
-    // Consultar todas
+    // Todas las casas
     bd.query(sqlTodas, params, (err, todas) => {
-      if (err) return res.status(500).send("Error cargando casas");
+      if (err) {
+        console.error(err);
+        return res.status(500).send("Error cargando casas");
+      }
 
-      // Convertir BLOB a Base64
+      // 🔥 Convertir BLOB a Base64 correctamente
       const procesar = lista =>
-        lista.map(c => ({
-          ...c,
-          ImagenBase64: c.Imagen ? Buffer.from(c.Imagen).toString("base64") : null
-        }));
+        lista.map(c => {
+
+          let imagenBase64 = null;
+
+          if (c.Imagen && Buffer.isBuffer(c.Imagen)) {
+            const base64 = c.Imagen.toString('base64');
+            imagenBase64 = `data:image/jpeg;base64,${base64}`;
+          }
+
+          return {
+            ...c,
+            ImagenBase64: imagenBase64
+          };
+        });
 
       res.render('index', {
         title: "Bienes Raíces",
@@ -66,7 +95,6 @@ router.get('/', function(req, res) {
       });
     });
   });
-
 });
 
 module.exports = router;
