@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 var bd = require('./bd')
+
+var multer = require('multer');
+var upload = multer();
+
 require('dotenv').config(); // Cargar variables de entorno
 
 //Manejo de insetar usuario 
@@ -213,7 +217,13 @@ router.get('/InicioDeVendedor', function (req, res, next) {
       res.render('index', {
         title: "Bienes Raíces",
         ultimas: procesar(ultimas),
-        casas: procesar(todas)
+        casas: procesar(todas),
+        ciudad,
+        pais,
+        precioMin,
+        precioMax
+
+
       });
     });
   });
@@ -341,5 +351,104 @@ router.post('/InicioSesion', function (req, res, next) {
 
 });
 
+router.get('/CargarPerfil', function (req, res) {
+
+  const id = req.session.IdPersona;
+
+  // 🔍 Ver qué ID viene en la sesión
+  console.log("ID de sesión:", id);
+  console.log("Cookies:", req.headers.cookie);
+console.log("SessionID:", req.sessionID);
+console.log("Session completa:", req.session);
+
+  bd.query("CALL ObtenerPerfil(?)", [id], function (err, results) {
+
+    if (err) {
+      console.log("Error en query:", err);
+      return res.send("Error al cargar perfil");
+    }
+
+    // 🔍 Ver qué devuelve MySQL
+    console.log("Resultados del SP:", results);
+let agent = {
+  idPersona: id, 
+  nombre: req.session.Nombre || "",
+  apellido: req.session.Apellido || "",
+  email: req.session.Correo || "",
+  telefono: req.session.Telefono || "",
+  descripcion: "",
+  experiencia: [],
+  redes: ""
+};
+
+    // 🔍 Validar estructura
+if (results[0] && results[0].length > 0) {
+
+  const data = results[0][0];
+
+  agent.nombre = data.Nombre;
+  agent.apellido = data.Apellido1;
+  agent.email = data.Correo;
+  agent.telefono = data.Telefono;
+
+  agent.descripcion = data.SobreMi;
+  agent.experiencia = data.Experiencia ? data.Experiencia.split(',') : [];
+  agent.redes = data.Redes;
+    } else {
+      console.log("⚠️ No se encontraron resultados para ese ID");
+    }
+
+    res.render('Perfil', { agent, propiedades: [] });
+
+  });
+
+});
+router.post('/GuardarPerfil', upload.single('imagen'), function (req, res) {
+
+  const id = req.session.IdPersona;
+  const { SobreMi, Experiencia, Redes } = req.body;
+  const imagen = req.file ? req.file.buffer : null;
+
+  bd.query(
+    "CALL GuardarPerfil(?, ?, ?, ?, ?)",
+    [id, SobreMi, Experiencia, Redes, imagen],
+    function (error, results) {
+
+      if (error) {
+        console.log(error);
+        return res.send("Error al guardar perfil");
+      }
+
+      res.redirect('/Usuarios/CargarPerfil');
+    }
+  );
+
+});
+
+router.get('/imagen/:id', function (req, res) {
+
+  const id = req.params.id;
+
+  bd.query(
+    "SELECT Imagen FROM informacion WHERE idPersona = ?",
+    [id],
+    function (err, results) {
+
+      if (err) {
+        console.log(err);
+        return res.send("Error al cargar imagen");
+      }
+
+      if (results.length > 0 && results[0].Imagen) {
+        res.setHeader("Content-Type", "image/jpeg");
+        res.send(results[0].Imagen);
+      } else {
+        res.redirect('/img/user.png'); // imagen por defecto
+      }
+
+    }
+  );
+
+});
 
 module.exports = router;

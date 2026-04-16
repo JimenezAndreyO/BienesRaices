@@ -142,12 +142,12 @@ router.delete('/EliminarCasa/:id', function (req, res) {
         }
     );
 });
-
 router.get('/Detalle/:idCasaVenta', function (req, res) {
 
   const idCasaVenta = req.params.idCasaVenta;
 
-  Console.log("Ingrese a DEtalle")
+  console.log("Ingrese a Detalle:", idCasaVenta);
+
   // 1️⃣ Obtener la casa
   bd.query(
     'SELECT * FROM CasasVentas WHERE idCasaVenta = ?',
@@ -165,28 +165,33 @@ router.get('/Detalle/:idCasaVenta', function (req, res) {
 
       const casa = casas[0];
 
-      // 2️⃣ Obtener TODAS las imágenes de esa casa
+      // 2️⃣ Obtener TODAS las imágenes
       bd.query(
         'SELECT Imagen FROM CasaImagenes WHERE idCasaVenta = ?',
         [idCasaVenta],
         function (err, imagenes) {
-
-          console.log("🧪 RAW imagenes:", imagenes);
-    console.log("🧪 Cantidad imagenes:", imagenes?.length);
 
           if (err) {
             console.error(err);
             return res.status(500).send("Error al cargar imágenes");
           }
 
-          // 3️⃣ Convertir imágenes a Base64
-          casa.Imagenes = imagenes.map(img =>
-            `data:image/jpeg;base64,${img.Imagen.toString('base64')}`
-          );
+          console.log("Cantidad imágenes:", imagenes.length);
 
-          console.log("📸 Imágenes encontradas:", casa.Imagenes.length);
+          // 3️⃣ Convertir imágenes a Base64 de forma segura
+          casa.Imagenes = [];
 
-          // 4️⃣ Enviar al Jade
+          if (imagenes && imagenes.length > 0) {
+            casa.Imagenes = imagenes
+              .filter(img => img.Imagen && Buffer.isBuffer(img.Imagen))
+              .map(img =>
+                `data:image/jpeg;base64,${img.Imagen.toString('base64')}`
+              );
+          }
+
+          console.log("Imágenes convertidas:", casa.Imagenes.length);
+
+          // 4️⃣ Render
           res.render('MuestraDeCasaIndividual', { casa });
         }
       );
@@ -265,5 +270,26 @@ router.post(
 });
 
 
+router.get('/Contactar/:id', function(req, res){
 
+  const id = req.params.id;
+
+  bd.query(`
+    SELECT Nombre, Apellido1, Correo, Telefono, idPersona
+    FROM Persona
+    WHERE idPersona = ?
+  `, [id], function(err, results){
+
+    if (err) {
+      console.log(err);
+      return res.send("Error");
+    }
+
+    const vendedor = results[0];
+
+    res.render('ComprarCasa', { vendedor });
+
+  });
+
+});
 module.exports = router;

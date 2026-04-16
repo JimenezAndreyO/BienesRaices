@@ -2,18 +2,12 @@ doctype html
 html(lang="es")
   head
     meta(charset="UTF-8")
-    meta(name="viewport" content="width=device-width, initial-scale=1")
+    meta(name="viewport", content="width=device-width, initial-scale=1")
     title Bienes Raíces
 
-    link(
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-    )
-    link(rel="stylesheet" href="/StyleHome.css")
-    script(
-      src="https://kit.fontawesome.com/a076d05399.js"
-      crossorigin="anonymous"
-    )
+    link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css")
+    link(rel="stylesheet", href="/StyleHome.css")
+    script(src="https://kit.fontawesome.com/a076d05399.js", crossorigin="anonymous")
 
   body
 
@@ -22,16 +16,14 @@ html(lang="es")
       .container
         a.navbar-brand(href="/") BienesRaíces
 
-        button.navbar-toggler(
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
-        )
+        button.navbar-toggler(type="button", data-bs-toggle="collapse", data-bs-target="#navbarNav")
           span.navbar-toggler-icon
 
         .collapse.navbar-collapse#navbarNav
           ul.navbar-nav.ms-auto
+
             if IdPersona
+
               li.nav-item
                 a.nav-link.text-white(
                   href=NombreRol === 'Administrador' 
@@ -41,18 +33,23 @@ html(lang="es")
                       : "/Usuarios/InicioPersona"
                 )
                   i.fas.fa-home.me-1
-                  | Inicio 
+                  | Inicio
 
               if NombreRol === 'Vendedor'
                 li.nav-item
                   a.nav-link.text-white(href="/CompraCasa/CargarBiblioteca")
                     i.fas.fa-book.me-1
-                    | Biblioteca 
+                    | Biblioteca
 
                 li.nav-item
                   a.nav-link.text-white(href="/CompraCasa/CargarCasas")
                     i.fas.fa-home.me-1
-                    | Venta de Casas 
+                    | Venta de Casas
+
+                li.nav-item
+                  a.nav-link.text-white(href="/Usuarios/CargarPerfil")
+                    i.fas.fa-home.me-1
+                    | Perfil
 
               if NombreRol === 'Administrador'
                 li.nav-item
@@ -64,6 +61,7 @@ html(lang="es")
                 a.nav-link.text-white(href="/Usuarios/CerrarSesion")
                   i.fas.fa-sign-out-alt.me-1
                   | Cerrar sesión
+
             else
               li.nav-item
                 a.nav-link.text-white(href="/")
@@ -79,11 +77,56 @@ html(lang="es")
 
 
     // ================= HERO =================
-    .hero
-      .hero-overlay
-      .container.position-relative.text-center
+    .hero.bg-light.py-5
+      .container.text-center
         h1 Encuentra tu hogar ideal
         p Las mejores propiedades al mejor precio
+
+
+    // ================= FILTRO DE BÚSQUEDA =================
+    .container.mt-4
+      form(method="GET", action="", class="p-4 shadow rounded bg-light")
+        .row.g-3
+
+          .col-md-3
+            label.form-label Ciudad
+            input.form-control(
+              type="text",
+              name="ciudad",
+              value=(ciudad || ''),
+              placeholder="Ej: San José"
+            )
+
+          .col-md-3
+            label.form-label País
+            input.form-control(
+              type="text",
+              name="pais",
+              value=(pais || ''),
+              placeholder="Ej: Costa Rica"
+            )
+
+          .col-md-2
+            label.form-label Precio mínimo
+            input.form-control(
+              type="number",
+              name="precioMin",
+              min="0",
+              value=(precioMin || '')
+            )
+
+          .col-md-2
+            label.form-label Precio máximo
+            input.form-control(
+              type="number",
+              name="precioMax",
+              min="0",
+              value=(precioMax || '')
+            )
+
+          .col-md-2.d-flex.align-items-end
+            button.btn.btn-primary.w-100(type="submit")
+              | Buscar
 
 
     // ================= CARRUSEL =================
@@ -91,22 +134,18 @@ html(lang="es")
       .container.mt-5
         h2.text-center.mb-4 Últimas propiedades en venta
 
-        #carouselUltimas.carousel.slide(
-          data-bs-ride="carousel"
-          data-bs-interval="3000"
-          data-bs-pause="hover"
-        )
+        #carouselUltimas.carousel.slide(data-bs-ride="carousel", data-bs-interval="3000")
           .carousel-inner
             each casa, i in ultimas
-              .carousel-item(class=(i === 0 ? "active" : ""))
+              .carousel-item(class=i === 0 ? "active" : "")
                 if casa.ImagenBase64
                   img.d-block.w-100(
-                    src=casa.ImagenBase64
+                    src=casa.ImagenBase64,
                     style="height:420px; object-fit:cover"
                   )
                 else
                   img.d-block.w-100(
-                    src="/img/no-image.jpg"
+                    src="/img/no-image.jpg",
                     style="height:420px; object-fit:cover"
                   )
 
@@ -114,18 +153,10 @@ html(lang="es")
                   h4= casa.Direccion
                   p ₡#{casa.Precio}
 
-          button.carousel-control-prev(
-            type="button"
-            data-bs-target="#carouselUltimas"
-            data-bs-slide="prev"
-          )
+          button.carousel-control-prev(type="button", data-bs-target="#carouselUltimas", data-bs-slide="prev")
             span.carousel-control-prev-icon
 
-          button.carousel-control-next(
-            type="button"
-            data-bs-target="#carouselUltimas"
-            data-bs-slide="next"
-          )
+          button.carousel-control-next(type="button", data-bs-target="#carouselUltimas", data-bs-slide="next")
             span.carousel-control-next-icon
 
 
@@ -138,15 +169,16 @@ html(lang="es")
           each casa in casas
             .col
               .card.shadow-sm
+
                 if casa.ImagenBase64
                   img.card-img-top(
-                    src=casa.ImagenBase64
-                    alt="Imagen de la casa"
+                    src=casa.ImagenBase64,
+                    alt="Imagen de la casa",
                     style="height:220px; object-fit:cover;"
                   )
                 else
                   img.card-img-top(
-                    src="/img/no-image.jpg"
+                    src="/img/no-image.jpg",
                     alt="Sin imagen"
                   )
 
@@ -155,20 +187,16 @@ html(lang="es")
                   p.card-text #{casa.Ciudad}, #{casa.Pais}
                   p.card-text
                     strong Precio:
-                    |  ₡#{casa.Precio}
+                    | ₡#{casa.Precio}
 
-                  a.btn.btn-primary(
-                    href=`/CompraCasa/Detalle/${casa.idCasaVenta}`
-                  ) Ver más
+                  a.btn.btn-primary(href="/CompraCasa/Detalle/" + casa.idCasaVenta)
+                    | Ver más
       else
         p.text-center No hay propiedades en venta por el momento.
 
 
     // ================= FOOTER =================
     footer.mt-5.text-center.py-4.bg-dark.text-white
-      p.mb-0 © 2025 Bienes Raíces - Todos los derechos reservados
+      p.mb-0 © 2026 Bienes Raíces - Todos los derechos reservados
 
-
-    script(
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
-    )
+    script(src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js")

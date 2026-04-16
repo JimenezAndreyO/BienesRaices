@@ -36,6 +36,7 @@ html(lang="es")
         max-height: 350px;
         object-fit: cover;
         border-radius: 10px;
+        margin-bottom: 10px;
       }
 
       .info .item {
@@ -82,10 +83,11 @@ html(lang="es")
 
       .detalle
         .imagen-container
-          if casa.Imagen
-            img(src=`data:image/jpeg;base64,${casa.Imagen}`, alt="Imagen de la casa")
+          if casa.Imagenes && casa.Imagenes.length > 0
+            each img in casa.Imagenes
+              img(src=img, alt="Imagen de la casa")
           else
-            p No hay imagen disponible
+            p No hay imágenes disponibles
 
         .info
           .item
@@ -119,5 +121,5 @@ html(lang="es")
           .precio
             | ₡#{casa.Precio}
 
-          a.boton-comprar(href=`/comprar?idCasaVenta=${casa.IdCasaVenta}`)
+         a.btn.btn-success(href="/CompraCasa/Contactar/" + casa.idPersona)
             | Comprar

@@ -1,0 +1,129 @@
+doctype html
+html(lang="es")
+head
+meta(charset="UTF-8")
+meta(name="viewport", content="width=device-width, initial-scale=1.0")
+title Perfil
+
+
+style.
+  body {
+    font-family: Arial;
+    background: #eef2f3;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 40px auto;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+  }
+
+  .header {
+    text-align: center;
+  }
+
+  .header img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .btn {
+    padding: 10px 15px;
+    border: none;
+    background: #4ca1af;
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+    margin-top: 10px;
+  }
+
+  .form-edit {
+    display: none;
+    margin-top: 20px;
+  }
+
+  input, textarea {
+    width: 100%;
+    padding: 8px;
+    margin: 5px 0 15px;
+  }
+
+  .info {
+    margin-top: 20px;
+  }
+
+
+body
+
+
+.container
+
+  .header
+    img#preview(src="/Usuarios/imagen/" + agent.idPersona)
+
+    // Nombre completo
+    h2 #{agent.nombre} #{agent.apellido}
+
+    // Correo
+    p 
+      strong Correo: 
+      | #{agent.email}
+
+    // Teléfono
+    p 
+      strong Teléfono: 
+      | #{agent.telefono || 'No disponible'}
+
+    button.btn(type="button", onclick="toggleEdit()") Editar perfil
+
+  // ===== FORMULARIO =====
+  form.form-edit(method="POST", action="/Usuarios/GuardarPerfil", enctype="multipart/form-data")
+
+    label Sobre mí
+    textarea(name="SobreMi")= agent.descripcion || ''
+
+    label Experiencia
+    input(type="text", name="Experiencia", value=(agent.experiencia ? agent.experiencia.join(',') : ''))
+
+    label Redes
+    input(type="text", name="Redes", value=agent.redes || '')
+
+    label Imagen
+    input(type="file", name="imagen", accept="image/*", onchange="previewImage(event)")
+
+    button.btn(type="submit") Guardar
+
+  // ===== INFO =====
+  .info
+    h3 Sobre mí
+    p= agent.descripcion || 'Sin descripción'
+
+    h3 Experiencia
+    p= agent.experiencia && agent.experiencia.length > 0 ? agent.experiencia.join(', ') : 'Sin experiencia'
+
+    h3 Redes
+    p= agent.redes || 'Sin redes'
+
+  // ===== DEBUG (puedes quitarlo luego) =====
+  //- pre= JSON.stringify(agent, null, 2)
+
+// ===== JAVASCRIPT =====
+script.
+  function toggleEdit() {
+    var form = document.querySelector('.form-edit');
+    form.style.display = (form.style.display === 'block') ? 'none' : 'block';
+  }
+
+  function previewImage(event) {
+    var reader = new FileReader();
+    reader.onload = function () {
+      var output = document.getElementById('preview');
+      output.src = reader.result;
+    };
+    reader.readAsDataURL(event.target.files[0]);
+  }
+

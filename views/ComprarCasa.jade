@@ -1,0 +1,119 @@
+doctype html
+html(lang="es")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    title Contactar vendedor
+
+    style.
+      body {
+        font-family: 'Segoe UI', sans-serif;
+        background: linear-gradient(135deg, #dfe9f3, #ffffff);
+        margin: 0;
+      }
+
+      .container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+
+      .card {
+        display: flex;
+        width: 800px;
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      }
+
+      .profile {
+        width: 40%;
+        background: #4ca1af;
+        color: white;
+        text-align: center;
+        padding: 30px;
+      }
+
+      .profile img {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid white;
+      }
+
+      .profile h2 {
+        margin-top: 15px;
+      }
+
+      .info {
+        margin-top: 20px;
+        font-size: 14px;
+      }
+
+      .contact {
+        width: 60%;
+        padding: 30px;
+      }
+
+      .contact h3 {
+        margin-bottom: 20px;
+      }
+
+      input, textarea {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+
+      button {
+        width: 100%;
+        padding: 12px;
+        background: #4ca1af;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background: #357f89;
+      }
+
+  body
+
+    .container
+      .card
+
+        // ===== PERFIL DEL VENDEDOR =====
+        .profile
+          img(src="/Usuarios/imagen/" + vendedor.idPersona)
+          h2 #{vendedor.Nombre} #{vendedor.Apellido1}
+          p Agente de Bienes Raíces
+
+          .info
+            p 📧 #{vendedor.Correo}
+            p 📞 #{vendedor.Telefono}
+
+        // ===== FORMULARIO =====
+        .contact
+          h3 Contactar vendedor
+
+          form(method="POST", action="/CompraCasa/EnviarMensaje")
+
+            input(type="hidden", name="idVendedor", value=vendedor.idPersona)
+
+            label Nombre
+            input(type="text", name="nombre", required)
+
+            label Correo
+            input(type="email", name="correo", required)
+
+            label Mensaje
+            textarea(name="mensaje", required)
+
+            button(type="submit") Enviar mensaje
