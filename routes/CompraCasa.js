@@ -275,7 +275,7 @@ router.get('/Contactar/:id', function(req, res){
   const id = req.params.id;
 
   bd.query(`
-    SELECT Nombre, Apellido1, Correo, Telefono, idPersona
+    SELECT Nombre, Apellido1, Apellido2, Correo, Telefono, idPersona
     FROM Persona
     WHERE idPersona = ?
   `, [id], function(err, results){
@@ -286,6 +286,8 @@ router.get('/Contactar/:id', function(req, res){
     }
 
     const vendedor = results[0];
+
+    console.log("Telefono")
 
     res.render('ComprarCasa', { vendedor });
 

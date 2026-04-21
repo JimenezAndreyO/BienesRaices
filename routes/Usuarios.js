@@ -9,6 +9,13 @@ require('dotenv').config(); // Cargar variables de entorno
 
 //Manejo de insetar usuario 
 
+
+
+router.get('/CerrarSesion', function (req, res, next) {
+  res.render('/');
+  console.log("Ingrese a login.");
+});
+
 router.get('/Registro', function (req, res, next) {
   res.render('Login');
   console.log("Ingrese a login.");
@@ -214,21 +221,46 @@ router.get('/InicioDeVendedor', function (req, res, next) {
           };
         });
 
-      res.render('index', {
-        title: "Bienes Raíces",
-        ultimas: procesar(ultimas),
-        casas: procesar(todas),
-        ciudad,
-        pais,
-        precioMin,
-        precioMax
+      // ================= 🔥 NUEVO: IMAGEN DEL USUARIO =================
+      const id = req.session.IdPersona;
 
+      bd.query("CALL ObtenerPerfil(?)", [id], (err, resultsPerfil) => {
+
+        let imagenUsuario = "";
+
+        if (!err && resultsPerfil[0] && resultsPerfil[0].length > 0) {
+          const data = resultsPerfil[0][0];
+
+          if (data.Imagen) {
+            if (Buffer.isBuffer(data.Imagen)) {
+              imagenUsuario = 'data:image/jpeg;base64,' + data.Imagen.toString('base64');
+            } else if (typeof data.Imagen === 'string') {
+              if (data.Imagen.startsWith('data:image')) {
+                imagenUsuario = data.Imagen;
+              } else {
+                imagenUsuario = 'data:image/jpeg;base64,' + data.Imagen;
+              }
+            }
+          }
+        }
+
+        // ================= RENDER =================
+        res.render('InicioDeVendedor', {
+          title: "Bienes Raíces",
+          ultimas: procesar(ultimas),
+          casas: procesar(todas),
+          ciudad,
+          pais,
+          precioMin,
+          precioMax,
+          imagenUsuario 
+        });
 
       });
+
     });
   });
 });
-
 
 router.get('/Error', function (req, res, next) {
   res.render('error');
@@ -378,7 +410,8 @@ let agent = {
   telefono: req.session.Telefono || "",
   descripcion: "",
   experiencia: [],
-  redes: ""
+  redes: "",
+  imagen: ""
 };
 
     // 🔍 Validar estructura
@@ -394,6 +427,25 @@ if (results[0] && results[0].length > 0) {
   agent.descripcion = data.SobreMi;
   agent.experiencia = data.Experiencia ? data.Experiencia.split(',') : [];
   agent.redes = data.Redes;
+  if (data.Imagen) {
+
+  // 🔥 Si es Buffer → convertir
+  if (Buffer.isBuffer(data.Imagen)) {
+    agent.imagen = 'data:image/jpeg;base64,' + data.Imagen.toString('base64');
+
+  } else if (typeof data.Imagen === 'string') {
+
+    // 🔥 Si ya es string
+    if (data.Imagen.startsWith('data:image')) {
+      agent.imagen = data.Imagen;
+    } else {
+      agent.imagen = 'data:image/jpeg;base64,' + data.Imagen;
+    }
+
+  }
+
+
+  }
     } else {
       console.log("⚠️ No se encontraron resultados para ese ID");
     }

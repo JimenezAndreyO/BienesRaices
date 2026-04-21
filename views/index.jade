@@ -19,50 +19,11 @@ html(lang="es")
         button.navbar-toggler(type="button", data-bs-toggle="collapse", data-bs-target="#navbarNav")
           span.navbar-toggler-icon
 
-        .collapse.navbar-collapse#navbarNav
+        .collapse.navbar-collapse#navbarNav   
           ul.navbar-nav.ms-auto
 
-            if IdPersona
+        
 
-              li.nav-item
-                a.nav-link.text-white(
-                  href=NombreRol === 'Administrador' 
-                    ? "/Usuarios/InicioAdministrador" 
-                    : NombreRol === 'Vendedor'
-                      ? "/Usuarios/InicioDeVendedor"
-                      : "/Usuarios/InicioPersona"
-                )
-                  i.fas.fa-home.me-1
-                  | Inicio
-
-              if NombreRol === 'Vendedor'
-                li.nav-item
-                  a.nav-link.text-white(href="/CompraCasa/CargarBiblioteca")
-                    i.fas.fa-book.me-1
-                    | Biblioteca
-
-                li.nav-item
-                  a.nav-link.text-white(href="/CompraCasa/CargarCasas")
-                    i.fas.fa-home.me-1
-                    | Venta de Casas
-
-                li.nav-item
-                  a.nav-link.text-white(href="/Usuarios/CargarPerfil")
-                    i.fas.fa-home.me-1
-                    | Perfil
-
-              if NombreRol === 'Administrador'
-                li.nav-item
-                  a.nav-link.text-white(href="/Usuarios/GestionUsuarios")
-                    i.fas.fa-users.me-1
-                    | Gestión Usuarios
-
-              li.nav-item
-                a.nav-link.text-white(href="/Usuarios/CerrarSesion")
-                  i.fas.fa-sign-out-alt.me-1
-                  | Cerrar sesión
-
-            else
               li.nav-item
                 a.nav-link.text-white(href="/")
                   | Inicio
@@ -70,6 +31,8 @@ html(lang="es")
               li.nav-item
                 a.nav-link.text-white(href="/Usuarios/Registro")
                   | Login
+
+
 
               li.nav-item
                 a.nav-link.text-white(href="/Notas/altatiket")
