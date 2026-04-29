@@ -28,39 +28,42 @@ router.get('/CargarIndex', function (req, res, next) {
  
 
 
-router.get('/InicioAdministrador', function (req, res, next) {
+router.get('/InicioPersona', function (req, res, next) {
   res.render('InicioDeAdministrativo');
   console.log(" Ingrese a Administrativo.");
 });
 
+//InicioPersona
 
 
-router.get('/InicioPersona', function (req, res, next) {
 
- 
+router.get('/InicioAdministrador', function (req, res, next) {
 
- const { ciudad, pais, precioMin, precioMax } = req.query;
+  // Filtros recibidos del usuario
 
-  let filtroSQL = "WHERE c.Estado = 'venta'";
+  console.log("Ingrese a inicio de vendedor")
+  const { ciudad, pais, precioMin, precioMax } = req.query;
+
+  let filtroSQL = "WHERE Estado = 'venta'";
   let params = [];
 
   if (ciudad) {
-    filtroSQL += " AND c.Ciudad LIKE ?";
+    filtroSQL += " AND Ciudad LIKE ?";
     params.push(`%${ciudad}%`);
   }
 
   if (pais) {
-    filtroSQL += " AND c.Pais LIKE ?";
+    filtroSQL += " AND Pais LIKE ?";
     params.push(`%${pais}%`);
   }
 
   if (precioMin) {
-    filtroSQL += " AND c.Precio >= ?";
+    filtroSQL += " AND Precio >= ?";
     params.push(precioMin);
   }
 
   if (precioMax) {
-    filtroSQL += " AND c.Precio <= ?";
+    filtroSQL += " AND Precio <= ?";
     params.push(precioMax);
   }
 
@@ -122,15 +125,46 @@ router.get('/InicioPersona', function (req, res, next) {
           };
         });
 
-      res.render('index', {
-        title: "Bienes Raíces",
-        ultimas: procesar(ultimas),
-        casas: procesar(todas)
+      // ================= 🔥 NUEVO: IMAGEN DEL USUARIO =================
+      const id = req.session.IdPersona;
+
+      bd.query("CALL ObtenerPerfil(?)", [id], (err, resultsPerfil) => {
+
+        let imagenUsuario = "";
+
+        if (!err && resultsPerfil[0] && resultsPerfil[0].length > 0) {
+          const data = resultsPerfil[0][0];
+
+          if (data.Imagen) {
+            if (Buffer.isBuffer(data.Imagen)) {
+              imagenUsuario = 'data:image/jpeg;base64,' + data.Imagen.toString('base64');
+            } else if (typeof data.Imagen === 'string') {
+              if (data.Imagen.startsWith('data:image')) {
+                imagenUsuario = data.Imagen;
+              } else {
+                imagenUsuario = 'data:image/jpeg;base64,' + data.Imagen;
+              }
+            }
+          }
+        }
+
+        // ================= RENDER =================
+        res.render('InicioDeAdministrativo', {
+          title: "Bienes Raíces",
+          ultimas: procesar(ultimas),
+          casas: procesar(todas),
+          ciudad,
+          pais,
+          precioMin,
+          precioMax,
+          imagenUsuario 
+        });
+
       });
+
     });
   });
 });
-
 
 
 router.get('/InicioDeVendedor', function (req, res, next) {
@@ -282,13 +316,13 @@ router.post('/RegistroPersonas', async function (req, res, next) {
       Usuario: req.body.usuario,
       Contrasena: req.body.contrasena,
       Telefono: req.body.telefono, 
-      PalabraClave: req.body.palabraClave
+
     };
 
    
 
     // Llamada al procedimiento almacenado
-    const sql = 'CALL sp_InsertUsuario(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+    const sql = 'CALL sp_InsertUsuario(?, ?, ?, ?, ?, ?, ?, ?, ?)';
 
     bd.query(sql, [
       RegistroPersonas.Identificacion,
@@ -299,8 +333,8 @@ router.post('/RegistroPersonas', async function (req, res, next) {
       RegistroPersonas.Correo,
       RegistroPersonas.Usuario,
       RegistroPersonas.Contrasena,
-      RegistroPersonas.Telefono,
-      RegistroPersonas.PalabraClave
+      RegistroPersonas.Telefono
+   
     ], function (error, resultado) {
       if (error) {
         console.error('❌ Error al ejecutar el procedimiento:', error);
@@ -501,6 +535,97 @@ router.get('/imagen/:id', function (req, res) {
     }
   );
 
+});
+
+router.get('/', (req, res) => {
+  bd.query('SELECT * FROM Persona', (err, results) => {
+    res.render('Personas', {
+      Usuarios: results,
+      msg: req.query.msg
+    });
+  });
+});
+
+router.get('/Usuarios', (req, res) => {
+  bd.query('SELECT * FROM Persona', (err, results) => {
+    if (err) throw err;
+
+    res.render('Personas', {
+      Usuarios: results
+    });
+  });
+});
+
+router.get('/editar/:id', (req, res) => {
+
+ 
+  const { id } = req.params;
+
+   console.log(req.body);
+
+  bd.query('SELECT * FROM Persona WHERE idPersona=?', [id], (err, results) => {
+    res.render('editar', {
+      Usuarios: results[0]
+    });
+  });
+});
+
+router.post('/Usuarios/eliminar/:id', (req, res) => {
+  const { id } = req.params;
+
+  bd.query('DELETE FROM Persona WHERE idPersona=?', [id], (err) => {
+    if (err) throw err;
+
+    // 👇 redirige con mensaje
+    res.redirect('/Usuarios?msg=eliminado');
+  });
+});
+
+
+
+router.post('/Usuarios/crear', (req, res) => {
+  console.log(req.body); // 👈 DEBUG
+
+  const {
+    Identificacion,
+    Nombre,
+    Apellido1,
+    Apellido2,
+    Edad,
+    Correo,
+    Usuario,
+    Contraseña,
+    Telefono,
+    IdRol
+  } = req.body;
+
+  bd.query(
+    `INSERT INTO Persona 
+    (Identificacion, Nombre, Apellido1, Apellido2, Edad, Correo, Usuario, Contraseña, Telefono, IdRol)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [Identificacion, Nombre, Apellido1, Apellido2, Edad, Correo, Usuario, Contraseña, Telefono, IdRol],
+    (err) => {
+      if (err) {
+        console.log(err); // 👈 ESTO TE DIRÁ EL ERROR REAL
+        return res.send("Error al insertar");
+      }
+
+      res.redirect('/Usuarios');
+    }
+  );
+});
+
+router.post('/editarPersona/:id', (req, res) => {
+  const { id } = req.params;
+  const { Nombre, Apellido1, Apellido2, Correo, Telefono } = req.body;
+
+  bd.query(
+    'UPDATE Persona SET Nombre=?, Apellido1=?, Apellido2=?, Correo=?, Telefono=? WHERE idPersona=?',
+    [Nombre, Apellido1, Apellido2, Correo, Telefono, id],
+    () => {
+      res.redirect('/usuarios');
+    }
+  );
 });
 
 module.exports = router;

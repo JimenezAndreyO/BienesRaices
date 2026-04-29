@@ -294,4 +294,42 @@ router.get('/Contactar/:id', function(req, res){
   });
 
 });
+
+
+router.get('/dashboard', async (req, res) => {
+  try {
+
+    const [results] = await bd.promise().query('CALL sp_dashboard()');
+
+    // 👇 IMPORTANTE: estructura
+    const totales = results[0][0];
+    const ventasMes = results[1];
+    const ultimasPersonas = results[2];
+
+    // 🔹 Procesar gráfico
+    const nombresMeses = [
+      '', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo',
+      'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre',
+      'Noviembre', 'Diciembre'
+    ];
+
+    const meses = ventasMes.map(v => nombresMeses[v.mes]);
+    const ventasPorMes = ventasMes.map(v => v.total);
+
+    res.render('GestionarRoles', {
+      totalPersonas: totales.totalPersonas,
+      totalPropiedades: totales.totalPropiedades,
+      totalVentas: totales.totalVentas,
+      meses,
+      ventasPorMes,
+      ultimasPersonas
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.send('Error en dashboard');
+  }
+});
+
+
 module.exports = router;

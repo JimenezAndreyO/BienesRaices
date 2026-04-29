@@ -1,0 +1,116 @@
+doctype html
+html(lang="es")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title Gestión de Usuarios
+
+    // Bootstrap
+    link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css")
+
+    // DataTables
+    link(rel="stylesheet", href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css")
+
+    script(src="https://code.jquery.com/jquery-3.7.0.min.js")
+    script(src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js")
+
+  body
+    .container.mt-4
+      h2 Gestión de Usuarios
+
+      // 🔹 MENSAJE
+      if msg == 'eliminado'
+        .alert.alert-danger Usuario eliminado correctamente
+
+      // 🔹 FORMULARIO CREAR
+      .card.mb-4
+        .card-body
+          h5 Crear Usuario
+
+          form(action="/Usuarios/Usuarios/crear" method="POST")
+            .row
+              .col
+                input.form-control(type="text" name="Identificacion" placeholder="Identificación" required)
+
+              .col
+                input.form-control(type="text" name="Nombre" placeholder="Nombre" required)
+
+              .col
+                input.form-control(type="text" name="Apellido1" placeholder="Apellido 1" required)
+
+              .col
+                input.form-control(type="text" name="Apellido2" placeholder="Apellido 2")
+
+              .col
+                input.form-control(type="number" name="Edad" placeholder="Edad")
+
+            br
+
+            .row
+              .col
+                input.form-control(type="email" name="Correo" placeholder="Correo")
+
+              .col
+                input.form-control(type="text" name="Usuario" placeholder="Usuario")
+
+              .col
+                input.form-control(type="password" name="Contraseña" placeholder="Contraseña")
+
+              .col
+                input.form-control(type="text" name="Telefono" placeholder="Teléfono")
+
+              .col
+                select.form-select(name="rol" required)
+                  option(value="") Seleccione rol
+                  option(value="1") Administrador
+                  option(value="2") Comprador
+
+            br
+            button.btn.btn-primary(type="submit") Crear
+
+      // 🔹 TABLA
+      table#tabla.table.table-striped
+        thead
+          tr
+            th Nombre
+            th Apellido1
+            th Apellido2
+            th Correo
+            th Teléfono
+            th Rol
+            th Acciones
+
+        tbody
+          each p in Usuarios
+            tr
+              td= p.Nombre
+              td= p.Apellido1
+              td= p.Apellido2
+              td= p.Correo
+              td= p.Telefono
+
+              // 🔹 MOSTRAR ROL BONITO
+              td= p.rol == 1 ? 'Administrador' : 'Comprador'
+
+              td
+                // 🔹 EDITAR (LO DEJO COMO LO TENÍAS)
+                a.btn.btn-warning.btn-sm(href=`/Usuarios/editar/${p.idPersona}`) Editar
+
+                // 🔹 ELIMINAR (CORREGIDO)
+                form(action=`/Usuarios/Usuarios/eliminar/${p.idPersona}` method="POST" style="display:inline;")
+                  button.btn.btn-danger.btn-sm(type="submit" onclick="return confirm('¿Eliminar?')") Eliminar
+
+    script.
+      $(document).ready(function() {
+        $('#tabla').DataTable({
+          language: {
+            search: "Buscar:",
+            lengthMenu: "Mostrar _MENU_ registros",
+            info: "Mostrando _START_ a _END_ de _TOTAL_ usuarios",
+            paginate: {
+              next: "Siguiente",
+              previous: "Anterior"
+            }
+          }
+        });
+      });

@@ -2,48 +2,161 @@ doctype html
 html(lang="es")
   head
     meta(charset="UTF-8")
-    meta(name="viewport" content="width=device-width, initial-scale=1")
+    meta(name="viewport", content="width=device-width, initial-scale=1")
     title Bienes Raíces
-    link(rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css")
-    link(rel="stylesheet" href="StyleHome.css")
-    script(src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous")
+    link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css")
+    link(rel="stylesheet", href="/StyleHome.css")
 
   body
-    // Navbar
+
+    // ================= NAVBAR =================
     nav.navbar.navbar-expand-lg.navbar-dark.bg-dark
       .container
-        a.navbar-brand(href="#") BienesRaíces
-        button.navbar-toggler(type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav")
-          span.navbar-toggler-icon
-        .collapse.navbar-collapse#navbarNav
-          ul.navbar-nav.ms-auto
-            li.nav-item
-              a.nav-link(href="#") Inicio
-            li.nav-item
-              a.nav-link(href="#") Perfil
-            li.nav-item
-              a.nav-link(href="#") Propiedades
-            li.nav-item
-              a.nav-link(href="#") Lotes
-            li.nav-item
-            a.nav-link(href="#") Administrar
-            li.nav-item
-            a.nav-link(href="#") Auditorias
-            li.nav-item
-            a.nav-link.text-white(href="/Notas/altatiket", class="enlace")
-                  i.fas.fa-info-circle.mr-1
-                  | Contactanos
-             
+        a.navbar-brand(href="/Usuarios/InicioDeVendedor") BienesRaíces
 
-    // Hero Section
+        button.navbar-toggler(type="button", data-bs-toggle="collapse", data-bs-target="#navbarNav")
+          span.navbar-toggler-icon
+
+        .collapse.navbar-collapse#navbarNav
+          ul.navbar-nav.ms-auto.align-items-center
+
+            li.nav-item
+              a.nav-link.text-white(href="/Usuarios/InicioDeVendedor") Inicio
+
+        
+
+            li.nav-item
+              a.nav-link.text-white(href="/CompraCasa/CargarBiblioteca") Biblioteca
+
+            li.nav-item
+              a.nav-link.text-white(href="/CompraCasa/CargarCasas") Venta de Casas
+
+      
+            li.nav-item
+              a.nav-link.text-white(href="/Notas/altatiket") Contáctanos
+
+
+                  li.nav-item
+              a.nav-link.text-white(href="/Usuarios/CargarPerfil") Perfil
+              
+
+            li.nav-item
+              a.nav-link.text-white(href="/CompraCasa/dashboard") Administración
+
+
+            li.nav-item
+              a.nav-link.text-white(href="/") Cerrar sesión
+
+
+            // 🔥 IMAGEN DEL USUARIO
+            li.nav-item.ms-2
+              if imagenUsuario
+                img(
+                  src=imagenUsuario,
+                  alt="Perfil",
+                  style="width:40px; height:40px; object-fit:cover; border-radius:50%;"
+                )
+              else
+                img(
+                  src="/img/user-default.png",
+                  alt="Sin imagen",
+                  style="width:40px; height:40px; object-fit:cover; border-radius:50%;"
+                )
+
+
+
+    // ================= HERO =================
     .hero
       .hero-overlay
       .container.position-relative.text-center
         h1 Encuentra tu hogar ideal
         p Las mejores propiedades al mejor precio
-     
-    // Footer
-    footer.mt-5
-      p © 2025 Bienes Raíces - Todos los derechos reservados
+
+
+    // ================= BUSCADOR =================
+    .container.mt-4
+      form(method="GET", action="/Usuarios/InicioDeVendedor", class="p-4 shadow rounded bg-light")
+        .row.g-3
+          .col-md-3
+            label.form-label Ciudad
+            input.form-control(type="text", name="ciudad", value=(ciudad || ''), placeholder="Ej: San José")
+
+          .col-md-3
+            label.form-label País
+            input.form-control(type="text", name="pais", value=(pais || ''), placeholder="Ej: Costa Rica")
+
+          .col-md-2
+            label.form-label Precio mínimo
+            input.form-control(type="number", name="precioMin", min="0", value=(precioMin || ''))
+
+          .col-md-2
+            label.form-label Precio máximo
+            input.form-control(type="number", name="precioMax", min="0", value=(precioMax || ''))
+
+          .col-md-2.d-flex.align-items-end
+            button.btn.btn-primary.w-100(type="submit") Buscar
+
+
+    // ================= CARRUSEL =================
+    if ultimas && ultimas.length > 0
+      .container.mt-5
+        h2.text-center.mb-4 Últimas propiedades en venta
+
+        #carouselUltimas.carousel.slide(data-bs-ride="carousel")
+          .carousel-inner
+            each casa, i in ultimas
+              .carousel-item(class=i === 0 ? "active" : "")
+                if casa.ImagenBase64
+                  img.d-block.w-100(
+                    src=casa.ImagenBase64,
+                    style="height:420px; object-fit:cover"
+                  )
+                else
+                  img.d-block.w-100(src="/img/no-image.jpg", style="height:420px; object-fit:cover")
+
+                .carousel-caption.bg-dark.bg-opacity-50.p-2.rounded
+                  h4= casa.Direccion
+                  p ₡#{casa.Precio}
+
+          button.carousel-control-prev(type="button", data-bs-target="#carouselUltimas", data-bs-slide="prev")
+            span.carousel-control-prev-icon
+
+          button.carousel-control-next(type="button", data-bs-target="#carouselUltimas", data-bs-slide="next")
+            span.carousel-control-next-icon
+
+
+    // ================= PROPIEDADES =================
+    .container.mt-5
+      h2.text-center.mb-4 Todas las propiedades
+
+      if casas && casas.length > 0
+        .row.row-cols-1.row-cols-md-3.g-4
+          each casa in casas
+            .col
+              .card.shadow-sm
+                if casa.ImagenBase64
+                  img.card-img-top(
+                    src=casa.ImagenBase64,
+                    style="height:220px; object-fit:cover;"
+                  )
+                else
+                  img.card-img-top(src="/img/no-image.jpg")
+
+                .card-body
+                  h5.card-title= casa.Direccion
+                  p.card-text #{casa.Ciudad}, #{casa.Pais}
+                  p.card-text
+                    strong Precio:
+                    | ₡#{casa.Precio}
+
+                  a.btn.btn-primary(href="/CompraCasa/Detalle/" + casa.idCasaVenta)
+                    | Ver más
+      else
+        p.text-center No hay propiedades en venta por el momento.
+
+
+    // ================= FOOTER =================
+    footer.mt-5.text-center.py-4.bg-dark.text-white
+      p.mb-0 © 2026 Bienes Raíces - Todos los derechos reservados
 
     script(src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js")

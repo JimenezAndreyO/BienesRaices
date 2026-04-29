@@ -1,0 +1,128 @@
+doctype html
+html(lang="es")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title Dashboard Admin
+
+    // Bootstrap
+    link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css")
+
+    // Icons
+    link(rel="stylesheet", href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css")
+
+    // Chart.js
+    script(src="https://cdn.jsdelivr.net/npm/chart.js")
+
+    style.
+      body {
+        overflow-x: hidden;
+      }
+      #sidebar {
+        min-height: 100vh;
+        background: #1f2937;
+        color: white;
+      }
+      #sidebar a {
+        color: white;
+        text-decoration: none;
+        display: block;
+        padding: 10px;
+      }
+      #sidebar a:hover {
+        background: #374151;
+      }
+
+  body
+    .container-fluid
+      .row
+
+        // 🔹 SIDEBAR
+        .col-md-2#sidebar
+          h4.text-center.mt-3 Admin
+          hr
+
+          a(href="/dashboard")
+            i.fa.fa-home
+            |  Dashboard
+
+          a(href="/Usuarios/Usuarios")
+            i.fa.fa-users
+            |  Usuarios
+
+          a(href="#")
+            i.fa.fa-building
+            |  Propiedades
+
+          a(href="#")
+            i.fa.fa-dollar-sign
+            |  Ventas
+
+          a(href="#")
+            i.fa.fa-cog
+            |  Configuración
+
+        // 🔹 CONTENIDO PRINCIPAL
+        .col-md-10.p-4
+
+          // NAVBAR
+          .d-flex.justify-content-between.align-items-center.mb-4
+            h2 Dashboard
+            button.btn.btn-danger Cerrar sesión
+
+          // 🔹 TARJETAS
+          .row.mb-4
+            .col-md-4
+              .card.shadow
+                .card-body
+                  h5 Personas
+                  h3 #{totalPersonas}
+
+            .col-md-4
+              .card.shadow
+                .card-body
+                  h5 Propiedades
+                  h3 #{totalPropiedades}
+
+            .col-md-4
+              .card.shadow
+                .card-body
+                  h5 Ventas
+                  h3 #{totalVentas}
+
+          // 🔹 GRÁFICO
+          .card.mb-4.shadow
+            .card-body
+              h5 Ventas por mes
+              canvas#ventasChart
+
+          // 🔹 TABLA ÚLTIMOS REGISTROS
+          .card.shadow
+            .card-body
+              h5 Últimas personas
+              table.table
+                thead
+                  tr
+                    th Nombre
+                    th Apellido
+                    th Correo
+                tbody
+                  each p in ultimasPersonas
+                    tr
+                      td= p.Nombre
+                      td= p.Apellido1
+                      td= p.Correo
+
+    script.
+      const ctx = document.getElementById('ventasChart');
+
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: !{JSON.stringify(meses)},
+          datasets: [{
+            label: 'Ventas',
+            data: !{JSON.stringify(ventasPorMes)}
+          }]
+        }
+      });
