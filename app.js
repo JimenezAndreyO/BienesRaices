@@ -23,12 +23,12 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ✅ Configurar las sesiones ANTES de las rutas
+
 app.use(session({
-  secret: 'mi_clave_secreta_segura', // cámbiala por algo más largo
+  secret: 'mi_clave_secreta_segura',
   resave: false,
   saveUninitialized: true,
-  cookie: { secure: false } // usa true solo si usas HTTPS
+  cookie: { secure: false } 
 }));
 
 

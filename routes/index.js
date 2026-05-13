@@ -2,8 +2,23 @@ var express = require('express');
 var router = express.Router();
 var bd = require('./bd');
 
-// Página Principal
-router.get('/', function (req, res) {
+// Middleware para verificar sesión
+function verificarSesion(req, res, next) {
+  if (!req.session.usuario) {
+    return res.redirect('/Login');
+  }
+  next();
+}
+
+// Página Principal - protegida por sesión
+router.get('/', verificarSesion, function (req, res) {
+
+  const usuario = req.session.usuario;
+
+  // Redirigir según rol
+  if (usuario.rol === 'admin') {
+    return res.redirect('/dashboard');
+  }
 
   const { ciudad, pais, precioMin, precioMax } = req.query;
 
@@ -30,7 +45,6 @@ router.get('/', function (req, res) {
     params.push(precioMax);
   }
 
-  // 🔥 Trae UNA imagen (BLOB) por casa
   const baseQuery = `
     SELECT 
       c.*,
@@ -57,41 +71,32 @@ router.get('/', function (req, res) {
     ORDER BY c.idCasaVenta DESC
   `;
 
-  // Últimas 5 casas
   bd.query(sqlUltimas, (err, ultimas) => {
     if (err) {
       console.error(err);
       return res.status(500).send("Error cargando últimas casas");
     }
 
-    // Todas las casas
     bd.query(sqlTodas, params, (err, todas) => {
       if (err) {
         console.error(err);
         return res.status(500).send("Error cargando casas");
       }
 
-      // 🔥 Convertir BLOB a Base64 correctamente
       const procesar = lista =>
         lista.map(c => {
-
           let imagenBase64 = null;
-
           if (c.Imagen && Buffer.isBuffer(c.Imagen)) {
-            const base64 = c.Imagen.toString('base64');
-            imagenBase64 = `data:image/jpeg;base64,${base64}`;
+            imagenBase64 = `data:image/jpeg;base64,${c.Imagen.toString('base64')}`;
           }
-
-          return {
-            ...c,
-            ImagenBase64: imagenBase64
-          };
+          return { ...c, ImagenBase64: imagenBase64 };
         });
 
       res.render('index', {
         title: "Bienes Raíces",
         ultimas: procesar(ultimas),
-        casas: procesar(todas)
+        casas: procesar(todas),
+        usuario: usuario // Pasar usuario al jade
       });
     });
   });

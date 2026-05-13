@@ -13,17 +13,17 @@ require('dotenv').config(); // Cargar variables de entorno
 
 router.get('/CerrarSesion', function (req, res, next) {
   res.render('/');
-  console.log("Ingrese a login.");
+ 
 });
 
 router.get('/Registro', function (req, res, next) {
   res.render('Login');
-  console.log("Ingrese a login.");
+  
 });
 
 router.get('/CargarIndex', function (req, res, next) {
   res.render('index');
-  console.log("Ingrese a index.");
+  
 });
  
 
@@ -67,7 +67,7 @@ router.get('/InicioAdministrador', function (req, res, next) {
     params.push(precioMax);
   }
 
-  // 🔥 Trae UNA imagen (BLOB) por casa
+
   const baseQuery = `
     SELECT 
       c.*,
@@ -108,7 +108,7 @@ router.get('/InicioAdministrador', function (req, res, next) {
         return res.status(500).send("Error cargando casas");
       }
 
-      // 🔥 Convertir BLOB a Base64 correctamente
+   
       const procesar = lista =>
         lista.map(c => {
 
@@ -125,7 +125,7 @@ router.get('/InicioAdministrador', function (req, res, next) {
           };
         });
 
-      // ================= 🔥 NUEVO: IMAGEN DEL USUARIO =================
+    
       const id = req.session.IdPersona;
 
       bd.query("CALL ObtenerPerfil(?)", [id], (err, resultsPerfil) => {
@@ -148,7 +148,7 @@ router.get('/InicioAdministrador', function (req, res, next) {
           }
         }
 
-        // ================= RENDER =================
+       
         res.render('InicioDeAdministrativo', {
           title: "Bienes Raíces",
           ultimas: procesar(ultimas),
@@ -169,9 +169,6 @@ router.get('/InicioAdministrador', function (req, res, next) {
 
 router.get('/InicioDeVendedor', function (req, res, next) {
 
-  // Filtros recibidos del usuario
-
-  console.log("Ingrese a inicio de vendedor")
   const { ciudad, pais, precioMin, precioMax } = req.query;
 
   let filtroSQL = "WHERE Estado = 'venta'";
@@ -197,7 +194,7 @@ router.get('/InicioDeVendedor', function (req, res, next) {
     params.push(precioMax);
   }
 
-  // 🔥 Trae UNA imagen (BLOB) por casa
+
   const baseQuery = `
     SELECT 
       c.*,
@@ -238,7 +235,7 @@ router.get('/InicioDeVendedor', function (req, res, next) {
         return res.status(500).send("Error cargando casas");
       }
 
-      // 🔥 Convertir BLOB a Base64 correctamente
+
       const procesar = lista =>
         lista.map(c => {
 
@@ -255,7 +252,7 @@ router.get('/InicioDeVendedor', function (req, res, next) {
           };
         });
 
-      // ================= 🔥 NUEVO: IMAGEN DEL USUARIO =================
+  
       const id = req.session.IdPersona;
 
       bd.query("CALL ObtenerPerfil(?)", [id], (err, resultsPerfil) => {
@@ -278,7 +275,7 @@ router.get('/InicioDeVendedor', function (req, res, next) {
           }
         }
 
-        // ================= RENDER =================
+        
         res.render('InicioDeVendedor', {
           title: "Bienes Raíces",
           ultimas: procesar(ultimas),
@@ -298,7 +295,7 @@ router.get('/InicioDeVendedor', function (req, res, next) {
 
 router.get('/Error', function (req, res, next) {
   res.render('error');
-  console.log("Ingrese a error.");
+
 });
 
 
@@ -337,16 +334,17 @@ router.post('/RegistroPersonas', async function (req, res, next) {
    
     ], function (error, resultado) {
       if (error) {
-        console.error('❌ Error al ejecutar el procedimiento:', error);
+        console.error(' Error al ejecutar el procedimiento:', error);
         return res.status(500).send('Error al registrar la persona.');
       }
 
-      console.log('✅ Persona registrada correctamente:', resultado);
+      //console.log('Persona registrada correctamente:', resultado);
       res.status(200).send('Persona registrada exitosamente.');
+
     });
 
   } catch (err) {
-    console.error('❌ Error inesperado:', err);
+    console.error('Error inesperado:', err);
     res.status(500).send('Error interno del servidor.');
   }
 });
@@ -384,7 +382,7 @@ router.post('/InicioSesion', function (req, res, next) {
 
       console.log(`Inicio de sesión exitoso: ID=${IdPersona}, Rol=${NombreRol}`);
 
-      // 🔥 IMPORTANTE: esperar que la sesión se guarde
+    
       req.session.save(function (err) {
 
         if (err) {
@@ -421,11 +419,10 @@ router.get('/CargarPerfil', function (req, res) {
 
   const id = req.session.IdPersona;
 
-  // 🔍 Ver qué ID viene en la sesión
   console.log("ID de sesión:", id);
   console.log("Cookies:", req.headers.cookie);
-console.log("SessionID:", req.sessionID);
-console.log("Session completa:", req.session);
+  console.log("SessionID:", req.sessionID);
+  console.log("Session completa:", req.session);
 
   bd.query("CALL ObtenerPerfil(?)", [id], function (err, results) {
 
@@ -434,59 +431,57 @@ console.log("Session completa:", req.session);
       return res.send("Error al cargar perfil");
     }
 
-    // 🔍 Ver qué devuelve MySQL
-    console.log("Resultados del SP:", results);
-let agent = {
-  idPersona: id, 
-  nombre: req.session.Nombre || "",
-  apellido: req.session.Apellido || "",
-  email: req.session.Correo || "",
-  telefono: req.session.Telefono || "",
-  descripcion: "",
-  experiencia: [],
-  redes: "",
-  imagen: ""
-};
+  
+  let agent = {
+    idPersona: id, 
+    nombre: req.session.Nombre || "",
+    apellido: req.session.Apellido || "",
+    email: req.session.Correo || "",
+    telefono: req.session.Telefono || "",
+    descripcion: "",
+    experiencia: [],
+    redes: "",
+    imagen: ""
+  };
 
-    // 🔍 Validar estructura
-if (results[0] && results[0].length > 0) {
+      // Validar estructura
+  if (results[0] && results[0].length > 0) {
 
-  const data = results[0][0];
+    const data = results[0][0];
 
-  agent.nombre = data.Nombre;
-  agent.apellido = data.Apellido1;
-  agent.email = data.Correo;
-  agent.telefono = data.Telefono;
+    agent.nombre = data.Nombre;
+    agent.apellido = data.Apellido1;
+    agent.email = data.Correo;
+    agent.telefono = data.Telefono;
 
-  agent.descripcion = data.SobreMi;
-  agent.experiencia = data.Experiencia ? data.Experiencia.split(',') : [];
-  agent.redes = data.Redes;
-  if (data.Imagen) {
+    agent.descripcion = data.SobreMi;
+    agent.experiencia = data.Experiencia ? data.Experiencia.split(',') : [];
+    agent.redes = data.Redes;
+    if (data.Imagen) {
 
-  // 🔥 Si es Buffer → convertir
-  if (Buffer.isBuffer(data.Imagen)) {
-    agent.imagen = 'data:image/jpeg;base64,' + data.Imagen.toString('base64');
+   
+    if (Buffer.isBuffer(data.Imagen)) {
+      agent.imagen = 'data:image/jpeg;base64,' + data.Imagen.toString('base64');
 
-  } else if (typeof data.Imagen === 'string') {
+    } else if (typeof data.Imagen === 'string') {
 
-    // 🔥 Si ya es string
-    if (data.Imagen.startsWith('data:image')) {
-      agent.imagen = data.Imagen;
-    } else {
-      agent.imagen = 'data:image/jpeg;base64,' + data.Imagen;
+     
+      if (data.Imagen.startsWith('data:image')) {
+        agent.imagen = data.Imagen;
+      } else {
+        agent.imagen = 'data:image/jpeg;base64,' + data.Imagen;
+      }
+
     }
 
-  }
-
-
-  }
-    } else {
-      console.log("⚠️ No se encontraron resultados para ese ID");
     }
+      } else {
+        console.log("No se encontraron resultados para ese ID");
+      }
 
-    res.render('Perfil', { agent, propiedades: [] });
+      res.render('Perfil', { agent, propiedades: [] });
 
-  });
+    });
 
 });
 router.post('/GuardarPerfil', upload.single('imagen'), function (req, res) {
@@ -537,14 +532,16 @@ router.get('/imagen/:id', function (req, res) {
 
 });
 
-router.get('/', (req, res) => {
-  bd.query('SELECT * FROM Persona', (err, results) => {
-    res.render('Personas', {
-      Usuarios: results,
-      msg: req.query.msg
-    });
-  });
-});
+//router.get('/', (req, res) => {
+  //bd.query('SELECT * FROM Persona', (err, results) => {
+    //res.render('Personas', {
+     // Usuarios: results,
+    //  msg: req.query.msg
+   // });
+  //});
+//});
+
+
 
 router.get('/Usuarios', (req, res) => {
   bd.query('SELECT * FROM Persona', (err, results) => {
@@ -581,7 +578,6 @@ router.post('/Usuarios/eliminar/:id', (req, res) => {
   bd.query('DELETE FROM Persona WHERE idPersona=?', [id], (err) => {
     if (err) throw err;
 
-    // 👇 redirige con mensaje
     res.redirect('/Usuarios?msg=eliminado');
   });
 });
@@ -611,7 +607,7 @@ router.post('/Usuarios/crear', (req, res) => {
     [Identificacion, Nombre, Apellido1, Apellido2, Edad, Correo, Usuario, Contraseña, Telefono, IdRol],
     (err) => {
       if (err) {
-        console.log(err); // 👈 ESTO TE DIRÁ EL ERROR REAL
+        console.log(err); 
         return res.send("Error al insertar");
       }
 

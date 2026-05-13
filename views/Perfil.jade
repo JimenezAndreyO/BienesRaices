@@ -65,22 +65,22 @@ body
   .header
     img#preview(src="/Usuarios/imagen/" + agent.idPersona)
 
-    // Nombre completo
+   
     h2 #{agent.nombre} #{agent.apellido}
 
-    // Correo
+
     p 
       strong Correo: 
       | #{agent.email}
 
-    // Teléfono
+    
     p 
       strong Teléfono: 
       | #{agent.telefono || 'No disponible'}
 
     button.btn(type="button", onclick="toggleEdit()") Editar perfil
 
-  // ===== FORMULARIO =====
+  
   form.form-edit(method="POST", action="/Usuarios/GuardarPerfil", enctype="multipart/form-data")
 
     label Sobre mí
@@ -97,7 +97,6 @@ body
 
     button.btn(type="submit") Guardar
 
-  // ===== INFO =====
   .info
     h3 Sobre mí
     p= agent.descripcion || 'Sin descripción'
@@ -108,10 +107,8 @@ body
     h3 Redes
     p= agent.redes || 'Sin redes'
 
-  // ===== DEBUG (puedes quitarlo luego) =====
-  //- pre= JSON.stringify(agent, null, 2)
+  
 
-// ===== JAVASCRIPT =====
 script.
   function toggleEdit() {
     var form = document.querySelector('.form-edit');

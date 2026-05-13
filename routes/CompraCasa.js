@@ -19,7 +19,7 @@ module.exports = router;
 
 router.get('/CargarCasas', function (req, res, next) {
   res.render('VentaDeCasas');
-  console.log("Ingrese a cargar ventas de casas.");
+  
 });
 
 router.get('/CargarBiblioteca', function (req, res) {
@@ -30,7 +30,6 @@ router.get('/CargarBiblioteca', function (req, res) {
         return res.redirect("/Usuarios/InicioSesion");
     }
 
-    // 1️⃣ Traer casas
     bd.query(
       "SELECT * FROM CasasVentas WHERE idPersona = ?",
       [idPersona],
@@ -45,7 +44,7 @@ router.get('/CargarBiblioteca', function (req, res) {
             return res.render("Biblioteca", { casas: [] });
         }
 
-        // 2️⃣ Traer imágenes por casa
+        // Traer imágenes por casa
         const ids = casas.map(c => c.idCasaVenta);
 
         bd.query(
@@ -59,7 +58,7 @@ router.get('/CargarBiblioteca', function (req, res) {
                 return res.status(500).send("Error cargando imágenes.");
             }
 
-            // 3️⃣ Agrupar imágenes por casa
+            // Agrupar imágenes por casa
             const map = {};
             imagenes.forEach(img => {
                 if (!map[img.idCasaVenta]) {
@@ -70,13 +69,13 @@ router.get('/CargarBiblioteca', function (req, res) {
                 );
             });
 
-            // 4️⃣ Asignar imágenes a cada casa
+            //  Asignar imágenes a cada casa
             casas = casas.map(casa => ({
                 ...casa,
                 Imagenes: map[casa.idCasaVenta] || []
             }));
 
-            console.log("🧪 DEBUG IMAGENES:");
+          
             casas.forEach(c => {
               console.log(
                 "Casa:", c.idCasaVenta,
@@ -123,7 +122,7 @@ router.delete('/EliminarCasa/:id', function (req, res) {
     const idPersona = req.session.IdPersona;
     const idCasaVenta = req.params.id;
 
-    console.log("Ingresamos en el delete", idCasaVenta, idPersona);
+
 
     if (!idPersona) {
         return res.status(401).json({ mensaje: "No hay sesión activa" });
@@ -142,13 +141,14 @@ router.delete('/EliminarCasa/:id', function (req, res) {
         }
     );
 });
+
+
 router.get('/Detalle/:idCasaVenta', function (req, res) {
 
   const idCasaVenta = req.params.idCasaVenta;
 
   console.log("Ingrese a Detalle:", idCasaVenta);
 
-  // 1️⃣ Obtener la casa
   bd.query(
     'SELECT * FROM CasasVentas WHERE idCasaVenta = ?',
     [idCasaVenta],
@@ -165,7 +165,6 @@ router.get('/Detalle/:idCasaVenta', function (req, res) {
 
       const casa = casas[0];
 
-      // 2️⃣ Obtener TODAS las imágenes
       bd.query(
         'SELECT Imagen FROM CasaImagenes WHERE idCasaVenta = ?',
         [idCasaVenta],
@@ -178,7 +177,7 @@ router.get('/Detalle/:idCasaVenta', function (req, res) {
 
           console.log("Cantidad imágenes:", imagenes.length);
 
-          // 3️⃣ Convertir imágenes a Base64 de forma segura
+         
           casa.Imagenes = [];
 
           if (imagenes && imagenes.length > 0) {
@@ -189,9 +188,6 @@ router.get('/Detalle/:idCasaVenta', function (req, res) {
               );
           }
 
-          console.log("Imágenes convertidas:", casa.Imagenes.length);
-
-          // 4️⃣ Render
           res.render('MuestraDeCasaIndividual', { casa });
         }
       );
@@ -211,11 +207,6 @@ router.post(
 
     const idPersona = req.session.IdPersona;
     const files = req.files;
-
-    console.log("🧪 req.files:", files);
-    console.log("🧪 cantidad:", files?.length);
-
-
     const { Direccion, Pais, Ciudad, Descripcion, Precio } = req.body;
 
     if (!files || files.length === 0) {
@@ -227,7 +218,7 @@ router.post(
     }
 
     try {
-        // 1️⃣ Obtener correo
+        
         const [persona] = await bd.promise().query(
             'SELECT Correo FROM Persona WHERE idPersona = ?',
             [idPersona]
@@ -239,7 +230,7 @@ router.post(
 
         const correo = persona[0].Correo;
 
-        // 2️⃣ Insertar casa
+        
         const [result] = await bd.promise().query(
           `INSERT INTO CasasVentas
            (idPersona, CorreoElectronico, Direccion, Pais, Ciudad, Descripcion, Precio, Estado)
@@ -249,7 +240,7 @@ router.post(
 
         const idCasaVenta = result.insertId;
 
-        // 3️⃣ Insertar imágenes (todas)
+      
         const sqlImagen = `
           INSERT INTO CasaImagenes (idCasaVenta, Imagen)
           VALUES (?, ?)
@@ -264,7 +255,7 @@ router.post(
         res.redirect("/CompraCasa/CargarBiblioteca");
 
     } catch (err) {
-        console.error("❌ Error registro casa:", err);
+        console.error("Error registro casa:", err);
         res.status(500).send("Error registrando casa.");
     }
 });
@@ -287,7 +278,6 @@ router.get('/Contactar/:id', function(req, res){
 
     const vendedor = results[0];
 
-    console.log("Telefono")
 
     res.render('ComprarCasa', { vendedor });
 
@@ -301,12 +291,12 @@ router.get('/dashboard', async (req, res) => {
 
     const [results] = await bd.promise().query('CALL sp_dashboard()');
 
-    // 👇 IMPORTANTE: estructura
+
     const totales = results[0][0];
     const ventasMes = results[1];
     const ultimasPersonas = results[2];
 
-    // 🔹 Procesar gráfico
+
     const nombresMeses = [
       '', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo',
       'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre',
@@ -398,8 +388,6 @@ router.get('/editar/:id', (req, res) => {
         idImagen: img.idImagen,
         Imagen: Buffer.isBuffer(img.Imagen) ? img.Imagen : Buffer.from(img.Imagen)
       }));
-
-      console.log('Imagenes procesadas:', imagenes.length); // Cuántas trae
 
       res.render('EditarCasa', {
         Casa: casa,
