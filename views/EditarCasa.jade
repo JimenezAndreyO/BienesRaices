@@ -1,0 +1,157 @@
+doctype html
+html(lang="es")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title Editar Casa
+
+    link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css")
+
+  body
+    .container.mt-4
+      h2 Editar Casa
+
+      if msg == 'actualizado'
+        .alert.alert-success Casa actualizada correctamente
+
+      form(action="/CompraCasa/actualizar/" + Casa.idCasaVenta method="POST" enctype="multipart/form-data")
+
+        .row
+          .col-md-6.mb-3
+            label.form-label Teléfono
+            input.form-control(
+              type="text"
+              name="telefono"
+              value=Casa.Telefono
+              required
+            )
+
+          .col-md-6.mb-3
+            label.form-label Correo Electrónico
+            input.form-control(
+              type="email"
+              name="correoElectronico"
+              value=Casa.CorreoElectronico
+              required
+            )
+
+        .row
+          .col-md-6.mb-3
+            label.form-label País
+            input.form-control(
+              type="text"
+              name="pais"
+              value=Casa.Pais
+              required
+            )
+
+          .col-md-6.mb-3
+            label.form-label Ciudad
+            input.form-control(
+              type="text"
+              name="ciudad"
+              value=Casa.Ciudad
+              required
+            )
+
+        .mb-3
+          label.form-label Dirección
+          input.form-control(
+            type="text"
+            name="direccion"
+            value=Casa.Direccion
+            required
+          )
+
+        .mb-3
+          label.form-label Descripción
+          textarea.form-control(
+            name="descripcion"
+            rows="3"
+            required
+          )= Casa.Descripcion
+
+        .row
+          .col-md-6.mb-3
+            label.form-label Precio (₡)
+            input.form-control(
+              type="number"
+              name="precio"
+              value=Casa.Precio
+              step="0.01"
+              required
+            )
+
+          .col-md-6.mb-3
+            label.form-label Estado
+            select.form-select(name="estado" required)
+              option(value="Disponible" selected=Casa.Estado === 'Disponible') Disponible
+              option(value="Vendida" selected=Casa.Estado === 'Vendida') Vendida
+              
+
+        hr
+
+        //- Sección de imágenes
+        .mb-4
+          h5 Imágenes de la Casa
+
+          if Imagenes && Imagenes.length > 0
+            .row.g-2.mb-3
+              each imagen in Imagenes
+                .col-md-3.col-sm-4.col-6
+                  .card
+                    img.card-img-top(
+                      src="data:image/jpeg;base64," + Buffer.from(imagen.Imagen).toString('base64')
+                      alt="Imagen de la casa"
+                      style="width:100%; height:120px; object-fit:cover;"
+                    )
+                    .card-body.p-2.text-center
+                      form(
+                        action="/CompraCasa/eliminar-imagen/" + imagen.idImagen + "/" + Casa.idCasaVenta
+                        method="POST"
+                      )
+                        button.btn.btn-danger.btn-sm(
+                          type="submit"
+                          onclick="return confirm('¿Eliminar esta imagen?')"
+                        ) 🗑 Eliminar
+          else
+            p.text-muted No hay imágenes registradas para esta casa
+
+          hr
+
+          h6 Agregar nueva imagen
+          .d-flex.gap-2.align-items-end
+            .flex-grow-1
+              input.form-control(
+                type="file"
+                name="imagenNueva"
+                accept="image/*"
+              )
+            button.btn.btn-success(
+              type="button"
+              onclick="document.getElementById('formAgregarImagen').submit()"
+            ) + Agregar Imagen
+
+        hr
+
+        .d-flex.gap-2.mt-3
+          button.btn.btn-warning(type="submit") Actualizar Casa
+          a.btn.btn-secondary(href="/CompraCasa") Cancelar
+
+
+      form#formAgregarImagen(
+        action="/CompraCasa/agregar-imagen/" + Casa.idCasaVenta
+        method="POST"
+        enctype="multipart/form-data"
+        style="display:none;"
+      )
+        input#inputImagenOculta(type="file" name="imagen")
+
+    script(src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js")
+
+    script.
+      document.querySelector('input[name="imagenNueva"]').addEventListener('change', function() {
+        const dt = new DataTransfer();
+        dt.items.add(this.files[0]);
+        document.getElementById('inputImagenOculta').files = dt.files;
+      });

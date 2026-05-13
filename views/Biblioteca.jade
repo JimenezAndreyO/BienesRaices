@@ -77,7 +77,7 @@ html(lang="es")
         each casa in casas
           .card(data-id=casa.idCasaVenta)
 
-            // ===== SLIDER =====
+          
             if casa.Imagenes && casa.Imagenes.length > 0
               .slider(
                 data-id=casa.idCasaVenta
@@ -104,7 +104,7 @@ html(lang="es")
                 alt="Sin imagen"
               )
 
-            // ===== CONTENIDO =====
+    
             .card-content
               h2 Casa #{casa.idCasaVenta}
               p Dirección: #{casa.Direccion}

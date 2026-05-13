@@ -558,14 +558,19 @@ router.get('/Usuarios', (req, res) => {
 
 router.get('/editar/:id', (req, res) => {
 
- 
   const { id } = req.params;
 
-   console.log(req.body);
+  bd.query('CALL sp_buscar_casa(?)', [id], (err, results) => {
 
-  bd.query('SELECT * FROM Persona WHERE idPersona=?', [id], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).send('Error al buscar la casa');
+    }
+
+    const casa = results[0][0]; 
+
     res.render('editar', {
-      Usuarios: results[0]
+      Casa: casa
     });
   });
 });
@@ -584,7 +589,7 @@ router.post('/Usuarios/eliminar/:id', (req, res) => {
 
 
 router.post('/Usuarios/crear', (req, res) => {
-  console.log(req.body); // 👈 DEBUG
+  console.log(req.body); 
 
   const {
     Identificacion,

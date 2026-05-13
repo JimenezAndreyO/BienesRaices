@@ -332,4 +332,94 @@ router.get('/dashboard', async (req, res) => {
 });
 
 
+router.get('/Casas', (req, res) => {
+
+  bd.query('CALL sp_listar_casas()', (err, results) => {
+
+    if (err) {
+      console.log(err);
+      return res.send('Error al cargar casas');
+    }
+
+    res.render('DashboardCasas', {
+      Casas: results[0],
+      msg: req.query.msg
+    });
+
+  });
+
+});
+
+router.post('/crear', (req, res) => {
+
+  const datos = req.body;
+
+  bd.query(
+    'CALL sp_crear_casa(?, ?, ?, ?, ?, ?, ?, ?)',
+    [
+      datos.Telefono,
+      datos.Direccion,
+      datos.Pais,
+      datos.Ciudad,
+      datos.CorreoElectronico,
+      datos.Descripcion,
+      datos.Precio,
+      datos.Estado
+    ],
+    (err, results) => {
+
+      if (err) {
+        console.log(err);
+        return res.send('Error al crear casa');
+      }
+
+      res.redirect('/Casas');
+
+    }
+  );
+
+});
+
+router.get('/editar/:id', (req, res) => {
+  const { id } = req.params;
+
+  bd.query('CALL sp_buscar_casa(?)', [id], (err, resultsCasa) => {
+    if (err) return res.status(500).send('Error al buscar la casa');
+
+    const casa = resultsCasa[0][0];
+    if (!casa) return res.status(404).send('Casa no encontrada');
+
+    bd.query('CALL sp_listar_imagenes_casa(?)', [id], (err, resultsImagenes) => {
+      if (err) return res.status(500).send('Error al obtener imágenes');
+
+      console.log('Imagenes raw:', resultsImagenes[0]); // Pégame esto
+
+      const imagenes = resultsImagenes[0].map(img => ({
+        idImagen: img.idImagen,
+        Imagen: Buffer.isBuffer(img.Imagen) ? img.Imagen : Buffer.from(img.Imagen)
+      }));
+
+      console.log('Imagenes procesadas:', imagenes.length); // Cuántas trae
+
+      res.render('EditarCasa', {
+        Casa: casa,
+        Imagenes: imagenes
+      });
+    });
+  });
+});
+
+router.post('/agregar-imagen/:idCasa', upload.single('imagen'), (req, res) => {
+  const { idCasa } = req.params;
+  const imagen = req.file.buffer;
+
+  bd.query('CALL sp_agregar_imagen(?, ?)', [idCasa, imagen], (err) => {
+    if (err) return res.status(500).send('Error al agregar imagen');
+
+    res.redirect(`/CompraCasa/editar/${idCasa}`);
+  });
+});
+
+
+
 module.exports = router;

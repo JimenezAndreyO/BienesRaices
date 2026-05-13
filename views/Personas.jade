@@ -5,10 +5,10 @@ html(lang="es")
     meta(name="viewport" content="width=device-width, initial-scale=1.0")
     title Gestión de Usuarios
 
-    // Bootstrap
+   
     link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css")
 
-    // DataTables
+   
     link(rel="stylesheet", href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css")
 
     script(src="https://code.jquery.com/jquery-3.7.0.min.js")
@@ -18,11 +18,11 @@ html(lang="es")
     .container.mt-4
       h2 Gestión de Usuarios
 
-      // 🔹 MENSAJE
+   
       if msg == 'eliminado'
         .alert.alert-danger Usuario eliminado correctamente
 
-      // 🔹 FORMULARIO CREAR
+     
       .card.mb-4
         .card-body
           h5 Crear Usuario
@@ -68,7 +68,7 @@ html(lang="es")
             br
             button.btn.btn-primary(type="submit") Crear
 
-      // 🔹 TABLA
+      
       table#tabla.table.table-striped
         thead
           tr
@@ -93,10 +93,10 @@ html(lang="es")
               td= p.rol == 1 ? 'Administrador' : 'Comprador'
 
               td
-                // 🔹 EDITAR (LO DEJO COMO LO TENÍAS)
+             
                 a.btn.btn-warning.btn-sm(href=`/Usuarios/editar/${p.idPersona}`) Editar
 
-                // 🔹 ELIMINAR (CORREGIDO)
+         
                 form(action=`/Usuarios/Usuarios/eliminar/${p.idPersona}` method="POST" style="display:inline;")
                   button.btn.btn-danger.btn-sm(type="submit" onclick="return confirm('¿Eliminar?')") Eliminar
 
