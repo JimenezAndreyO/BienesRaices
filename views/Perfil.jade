@@ -63,8 +63,8 @@ body
 .container
 
   .header
-    img#preview(src="/Usuarios/imagen/" + agent.idPersona)
-
+  
+    img#preview(src=agent.imagen || '/img/user.png')
    
     h2 #{agent.nombre} #{agent.apellido}
 

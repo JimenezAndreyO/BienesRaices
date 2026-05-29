@@ -1,14 +1,14 @@
 const mysql = require('mysql2');
+require('dotenv').config(); 
 
 const pool = mysql.createPool({
-  host: '127.0.0.1',
-  user: 'root',
-  password: 'root',
-  database: 'bienesraices',
+  host: process.env.DBHOST,
+  user: process.env.DBUSER,
+  password: process.env.DBPASS,
+  database: process.env.DBNAME,
   connectionLimit: 10
 });
 
-// Solo para probar conexión inicial
 pool.getConnection((err, connection) => {
   if (err) {
     console.error("❌ Error al conectar a MySQL:", err);

@@ -93,7 +93,7 @@ html(lang="es")
 
         //- Sección de imágenes
         .mb-4
-          h5 Imágenes de la Casa
+         h5 Imágenes de la Casa
 
           if Imagenes && Imagenes.length > 0
             .row.g-2.mb-3
@@ -101,7 +101,7 @@ html(lang="es")
                 .col-md-3.col-sm-4.col-6
                   .card
                     img.card-img-top(
-                      src="data:image/jpeg;base64," + Buffer.from(imagen.Imagen).toString('base64')
+                      src=imagen.Imagen
                       alt="Imagen de la casa"
                       style="width:100%; height:120px; object-fit:cover;"
                     )
@@ -118,7 +118,6 @@ html(lang="es")
             p.text-muted No hay imágenes registradas para esta casa
 
           hr
-
           h6 Agregar nueva imagen
           .d-flex.gap-2.align-items-end
             .flex-grow-1

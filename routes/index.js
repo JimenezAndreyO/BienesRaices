@@ -2,24 +2,10 @@ var express = require('express');
 var router = express.Router();
 var bd = require('./bd');
 
-// Middleware para verificar sesión
-function verificarSesion(req, res, next) {
-  if (!req.session.usuario) {
-    return res.redirect('/Login');
-  }
-  next();
-}
+// Página Principal - SIN verificación de sesión
+router.get('/', function (req, res) {
 
-// Página Principal - protegida por sesión
-router.get('/', verificarSesion, function (req, res) {
-
-  const usuario = req.session.usuario;
-
-  // Redirigir según rol
-  if (usuario.rol === 'admin') {
-    return res.redirect('/dashboard');
-  }
-
+  const usuario = req.session.usuario || null;
   const { ciudad, pais, precioMin, precioMax } = req.query;
 
   let filtroSQL = "WHERE c.Estado = 'venta'";
@@ -29,17 +15,14 @@ router.get('/', verificarSesion, function (req, res) {
     filtroSQL += " AND c.Ciudad LIKE ?";
     params.push(`%${ciudad}%`);
   }
-
   if (pais) {
     filtroSQL += " AND c.Pais LIKE ?";
     params.push(`%${pais}%`);
   }
-
   if (precioMin) {
     filtroSQL += " AND c.Precio >= ?";
     params.push(precioMin);
   }
-
   if (precioMax) {
     filtroSQL += " AND c.Precio <= ?";
     params.push(precioMax);
@@ -83,20 +66,18 @@ router.get('/', verificarSesion, function (req, res) {
         return res.status(500).send("Error cargando casas");
       }
 
+      // Imagen ya es URL directa, solo asignarla
       const procesar = lista =>
-        lista.map(c => {
-          let imagenBase64 = null;
-          if (c.Imagen && Buffer.isBuffer(c.Imagen)) {
-            imagenBase64 = `data:image/jpeg;base64,${c.Imagen.toString('base64')}`;
-          }
-          return { ...c, ImagenBase64: imagenBase64 };
-        });
+        lista.map(c => ({
+          ...c,
+          ImagenBase64: c.Imagen || null  
+        }));
 
       res.render('index', {
         title: "Bienes Raíces",
         ultimas: procesar(ultimas),
         casas: procesar(todas),
-        usuario: usuario // Pasar usuario al jade
+        usuario
       });
     });
   });

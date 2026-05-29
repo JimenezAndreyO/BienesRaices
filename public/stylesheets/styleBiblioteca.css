@@ -1,102 +1,173 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 body {
-  font-family: Arial, sans-serif;
-  background: #f5f5f5;
-  padding: 20px;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #f0f2f5;
+  color: #333;
+  padding: 30px 20px;
 }
 
 .container {
   max-width: 1200px;
-  margin: auto;
+  margin: 0 auto;
 }
 
+.container h1 {
+  font-size: 28px;
+  margin-bottom: 24px;
+  color: #1a1a2e;
+  border-left: 5px solid #2a7ae2;
+  padding-left: 12px;
+}
+
+/* Grid de tarjetas */
+.container > .card {
+  display: inline-block;
+  width: calc(33.33% - 16px);
+  margin: 8px;
+  vertical-align: top;
+}
+
+@media (max-width: 900px) {
+  .container > .card {
+    width: calc(50% - 16px);
+  }
+}
+
+@media (max-width: 580px) {
+  .container > .card {
+    width: 100%;
+    margin: 8px 0;
+  }
+}
+
+/* Tarjeta */
 .card {
-  background: #fff;
+  background: white;
   border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
   overflow: hidden;
-  margin-bottom: 25px;
-  display: flex;
-  transition: transform .2s ease-in-out;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .card:hover {
-  transform: scale(1.01);
+  transform: translateY(-4px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.13);
 }
 
+/* Imagen principal */
 .card-img {
-  width: 280px;
+  width: 100%;
   height: 200px;
   object-fit: cover;
+  display: block;
+  border-radius: 8px 8px 0 0;
 }
 
+/* Contenido de la tarjeta */
 .card-content {
-  padding: 15px 20px;
-  width: 100%;
+  padding: 16px;
 }
 
-.buttons {
-  margin-top: 10px;
+.card-content h2 {
+  font-size: 17px;
+  margin-bottom: 8px;
+  color: #1a1a2e;
 }
 
-button {
-  padding: 10px 15px;
-  margin-right: 8px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: background .2s;
+.card-content p {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 5px;
+  line-height: 1.5;
 }
 
+/* Botón ver información */
 .view-btn {
-  background: #007bff;
+  margin-top: 12px;
+  width: 100%;
+  padding: 9px;
+  background: #2a7ae2;
   color: white;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background 0.2s ease;
 }
 
 .view-btn:hover {
-  background: #005fcc;
+  background: #1a5dbf;
 }
 
-.edit-btn {
-  background: #ffc107;
-  color: #333;
-}
-
-.edit-btn:hover {
-  background: #d4a106;
-}
-
-.delete-btn {
-  background: #dc3545;
-  color: white;
-}
-
-.delete-btn:hover {
-  background: #b52a36;
-}
-
-.card {
-  border: 1px solid #ddd;
-  padding: 15px;
-  margin-bottom: 20px;
-  border-radius: 10px;
-  transition: 0.3s;
-}
-
-.card-img {
-  width: 100%;
-  border-radius: 10px;
-}
-
+/* Panel de información extra (oculto por defecto) */
 .extra-info {
   max-height: 0;
   overflow: hidden;
-  opacity: 0;
-  transition: all .4s ease;
+  transition: max-height 0.35s ease, padding 0.2s ease;
 }
 
 .extra-info.open {
   max-height: 500px;
-  opacity: 1;
-  margin-top: 10px;
+  padding-top: 12px;
+}
+
+.extra-info hr {
+  border: none;
+  border-top: 1px solid #eee;
+  margin-bottom: 12px;
+}
+
+.extra-info h3 {
+  font-size: 15px;
+  margin-bottom: 10px;
+  color: #1a1a2e;
+}
+
+.extra-info p {
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 5px;
+}
+
+/* Botones de acción */
+.buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.edit-btn,
+.delete-btn {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.2s ease;
+}
+
+.edit-btn {
+  background: #f0a500;
+  color: white;
+}
+
+.edit-btn:hover {
+  background: #c98400;
+}
+
+.delete-btn {
+  background: #e23a3a;
+  color: white;
+}
+
+.delete-btn:hover {
+  background: #b52b2b;
 }

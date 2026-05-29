@@ -1,21 +1,31 @@
 const express = require('express');
-const router = express.Router();
+const router = express.Router();  // ← solo una vez
 var bd = require('./bd');
 require('dotenv').config();
 const multer = require('multer');
+const cloudinary = require('cloudinary').v2;  // ← agregar aquí
 
 const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
-const upload = multer({
-  storage,
-  limits: {
-    files: 20
-  }
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-
-module.exports = router;
-
+function subirACloudinary(buffer) {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: 'casas_ventas' },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result.secure_url);
+      }
+    );
+    stream.end(buffer);
+  });
+}
 
 router.get('/CargarCasas', function (req, res, next) {
   res.render('VentaDeCasas');
@@ -196,13 +206,14 @@ router.get('/Detalle/:idCasaVenta', function (req, res) {
 });
 
 
+
 router.post(
   '/RegistroCasa',
   upload.array('imagenes', 20),
   async function (req, res) {
 
     if (!req.session.IdPersona) {
-        return res.status(401).send("Debe iniciar sesión.");
+      return res.status(401).send("Debe iniciar sesión.");
     }
 
     const idPersona = req.session.IdPersona;
@@ -210,56 +221,57 @@ router.post(
     const { Direccion, Pais, Ciudad, Descripcion, Precio } = req.body;
 
     if (!files || files.length === 0) {
-        return res.status(400).send("Debe subir al menos una imagen.");
+      return res.status(400).send("Debe subir al menos una imagen.");
     }
 
     if (!Direccion || !Pais || !Ciudad || !Precio) {
-        return res.status(400).send("Faltan datos obligatorios.");
+      return res.status(400).send("Faltan datos obligatorios.");
     }
 
     try {
-        
-        const [persona] = await bd.promise().query(
-            'SELECT Correo FROM Persona WHERE idPersona = ?',
-            [idPersona]
-        );
+      const [persona] = await bd.promise().query(
+        'SELECT Correo FROM Persona WHERE idPersona = ?',
+        [idPersona]
+      );
 
-        if (persona.length === 0) {
-            return res.status(500).send("Usuario no encontrado.");
-        }
+      if (persona.length === 0) {
+        return res.status(500).send("Usuario no encontrado.");
+      }
 
-        const correo = persona[0].Correo;
+      const correo = persona[0].Correo;
 
-        
-        const [result] = await bd.promise().query(
-          `INSERT INTO CasasVentas
-           (idPersona, CorreoElectronico, Direccion, Pais, Ciudad, Descripcion, Precio, Estado)
-           VALUES (?, ?, ?, ?, ?, ?, ?, 'venta')`,
-          [idPersona, correo, Direccion, Pais, Ciudad, Descripcion || '', Precio]
-        );
+      const [result] = await bd.promise().query(
+        `INSERT INTO CasasVentas
+         (idPersona, CorreoElectronico, Direccion, Pais, Ciudad, Descripcion, Precio, Estado)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 'venta')`,
+        [idPersona, correo, Direccion, Pais, Ciudad, Descripcion || '', Precio]
+      );
 
-        const idCasaVenta = result.insertId;
+      const idCasaVenta = result.insertId;
 
-      
-        const sqlImagen = `
-          INSERT INTO CasaImagenes (idCasaVenta, Imagen)
-          VALUES (?, ?)
-        `;
+      // Subir todas las imágenes a Cloudinary en paralelo
+      const urls = await Promise.all(
+        files.map(file => subirACloudinary(file.buffer))
+      );
 
-        const inserts = files.map(file =>
-          bd.promise().query(sqlImagen, [idCasaVenta, file.buffer])
-        );
+      // Insertar las URLs en la base de datos
+      const sqlImagen = `
+        INSERT INTO CasaImagenes (idCasaVenta, Imagen)
+        VALUES (?, ?)
+      `;
 
-        await Promise.all(inserts);
+      await Promise.all(
+        urls.map(url => bd.promise().query(sqlImagen, [idCasaVenta, url]))
+      );
 
-        res.redirect("/CompraCasa/CargarBiblioteca");
+      res.redirect("/CompraCasa/CargarBiblioteca");
 
     } catch (err) {
-        console.error("Error registro casa:", err);
-        res.status(500).send("Error registrando casa.");
+      console.error("Error registro casa:", err);
+      res.status(500).send("Error registrando casa.");
     }
-});
-
+  }
+);
 
 router.get('/Contactar/:id', function(req, res){
 

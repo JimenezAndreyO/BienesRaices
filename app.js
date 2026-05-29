@@ -40,7 +40,9 @@ app.use((req, res, next) => {
 });
 
 
-
+app.get('/test', (req, res) => {
+  res.send('Servidor funcionando OK');
+});
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);

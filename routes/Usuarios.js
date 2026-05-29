@@ -1,14 +1,13 @@
 const express = require('express');
 const router = express.Router();
-var bd = require('./bd')
+var bd = require('./bd');
+require('dotenv').config();
 
-var multer = require('multer');
-var upload = multer();
+const multer = require('multer');
+const { subirACloudinary } = require('./Cloudinary'); // ← desde routes/
 
-require('dotenv').config(); // Cargar variables de entorno
-
-//Manejo de insetar usuario 
-
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 
 router.get('/CerrarSesion', function (req, res, next) {
@@ -36,10 +35,7 @@ router.get('/InicioPersona', function (req, res, next) {
 //InicioPersona
 
 
-
 router.get('/InicioAdministrador', function (req, res, next) {
-
-  // Filtros recibidos del usuario
 
   console.log("Ingrese a inicio de vendedor")
   const { ciudad, pais, precioMin, precioMax } = req.query;
@@ -47,121 +43,59 @@ router.get('/InicioAdministrador', function (req, res, next) {
   let filtroSQL = "WHERE Estado = 'venta'";
   let params = [];
 
-  if (ciudad) {
-    filtroSQL += " AND Ciudad LIKE ?";
-    params.push(`%${ciudad}%`);
-  }
-
-  if (pais) {
-    filtroSQL += " AND Pais LIKE ?";
-    params.push(`%${pais}%`);
-  }
-
-  if (precioMin) {
-    filtroSQL += " AND Precio >= ?";
-    params.push(precioMin);
-  }
-
-  if (precioMax) {
-    filtroSQL += " AND Precio <= ?";
-    params.push(precioMax);
-  }
-
+  if (ciudad) { filtroSQL += " AND Ciudad LIKE ?"; params.push(`%${ciudad}%`); }
+  if (pais)   { filtroSQL += " AND Pais LIKE ?";   params.push(`%${pais}%`); }
+  if (precioMin) { filtroSQL += " AND Precio >= ?"; params.push(precioMin); }
+  if (precioMax) { filtroSQL += " AND Precio <= ?"; params.push(precioMax); }
 
   const baseQuery = `
-    SELECT 
-      c.*,
-      (
-        SELECT Imagen
-        FROM CasaImagenes
-        WHERE idCasaVenta = c.idCasaVenta
-        ORDER BY idImagen ASC
-        LIMIT 1
-      ) AS Imagen
+    SELECT c.*,
+      (SELECT Imagen FROM CasaImagenes
+       WHERE idCasaVenta = c.idCasaVenta
+       ORDER BY idImagen ASC LIMIT 1) AS Imagen
     FROM CasasVentas c
   `;
 
-  const sqlUltimas = `
-    ${baseQuery}
-    WHERE c.Estado = 'venta'
-    ORDER BY c.idCasaVenta DESC
-    LIMIT 5
-  `;
+  const sqlUltimas = `${baseQuery} WHERE c.Estado = 'venta' ORDER BY c.idCasaVenta DESC LIMIT 5`;
+  const sqlTodas   = `${baseQuery} ${filtroSQL} ORDER BY c.idCasaVenta DESC`;
 
-  const sqlTodas = `
-    ${baseQuery}
-    ${filtroSQL}
-    ORDER BY c.idCasaVenta DESC
-  `;
+  // Imagen ya es URL de Cloudinary, solo asignarla directamente
+  const procesar = lista =>
+    lista.map(c => ({ ...c, ImagenBase64: c.Imagen || null }));
 
-  // Últimas 5 casas
   bd.query(sqlUltimas, (err, ultimas) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).send("Error cargando últimas casas");
-    }
+    if (err) { console.error(err); return res.status(500).send("Error cargando últimas casas"); }
 
-    // Todas las casas
     bd.query(sqlTodas, params, (err, todas) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).send("Error cargando casas");
-      }
+      if (err) { console.error(err); return res.status(500).send("Error cargando casas"); }
 
-   
-      const procesar = lista =>
-        lista.map(c => {
-
-          let imagenBase64 = null;
-
-          if (c.Imagen && Buffer.isBuffer(c.Imagen)) {
-            const base64 = c.Imagen.toString('base64');
-            imagenBase64 = `data:image/jpeg;base64,${base64}`;
-          }
-
-          return {
-            ...c,
-            ImagenBase64: imagenBase64
-          };
-        });
-
-    
       const id = req.session.IdPersona;
 
-      bd.query("CALL ObtenerPerfil(?)", [id], (err, resultsPerfil) => {
+     bd.query("CALL ObtenerPerfil(?)", [id], (err, resultsPerfil) => {
 
-        let imagenUsuario = "";
+      let imagenUsuario = "";
 
         if (!err && resultsPerfil[0] && resultsPerfil[0].length > 0) {
           const data = resultsPerfil[0][0];
-
-          if (data.Imagen) {
-            if (Buffer.isBuffer(data.Imagen)) {
-              imagenUsuario = 'data:image/jpeg;base64,' + data.Imagen.toString('base64');
-            } else if (typeof data.Imagen === 'string') {
-              if (data.Imagen.startsWith('data:image')) {
-                imagenUsuario = data.Imagen;
-              } else {
-                imagenUsuario = 'data:image/jpeg;base64,' + data.Imagen;
-              }
-            }
-          }
+          imagenUsuario = data.Imagen || "";  // ← URL directa de Cloudinary
         }
 
-       
+        res.render('InicioDeAdministrativo', { // o 'InicioDeVendedor'
+          title: "Bienes Raíces",
+          ultimas: procesar(ultimas),
+          casas: procesar(todas),
+          ciudad, pais, precioMin, precioMax,
+          imagenUsuario
+        });
+   
         res.render('InicioDeAdministrativo', {
           title: "Bienes Raíces",
           ultimas: procesar(ultimas),
           casas: procesar(todas),
-          ciudad,
-          pais,
-          precioMin,
-          precioMax,
-          imagenUsuario 
+          ciudad, pais, precioMin, precioMax,
+          imagenUsuario
         });
-
       });
-
     });
   });
 });
@@ -174,123 +108,62 @@ router.get('/InicioDeVendedor', function (req, res, next) {
   let filtroSQL = "WHERE Estado = 'venta'";
   let params = [];
 
-  if (ciudad) {
-    filtroSQL += " AND Ciudad LIKE ?";
-    params.push(`%${ciudad}%`);
-  }
-
-  if (pais) {
-    filtroSQL += " AND Pais LIKE ?";
-    params.push(`%${pais}%`);
-  }
-
-  if (precioMin) {
-    filtroSQL += " AND Precio >= ?";
-    params.push(precioMin);
-  }
-
-  if (precioMax) {
-    filtroSQL += " AND Precio <= ?";
-    params.push(precioMax);
-  }
-
+  if (ciudad) { filtroSQL += " AND Ciudad LIKE ?"; params.push(`%${ciudad}%`); }
+  if (pais)   { filtroSQL += " AND Pais LIKE ?";   params.push(`%${pais}%`); }
+  if (precioMin) { filtroSQL += " AND Precio >= ?"; params.push(precioMin); }
+  if (precioMax) { filtroSQL += " AND Precio <= ?"; params.push(precioMax); }
 
   const baseQuery = `
-    SELECT 
-      c.*,
-      (
-        SELECT Imagen
-        FROM CasaImagenes
-        WHERE idCasaVenta = c.idCasaVenta
-        ORDER BY idImagen ASC
-        LIMIT 1
-      ) AS Imagen
+    SELECT c.*,
+      (SELECT Imagen FROM CasaImagenes
+       WHERE idCasaVenta = c.idCasaVenta
+       ORDER BY idImagen ASC LIMIT 1) AS Imagen
     FROM CasasVentas c
   `;
 
-  const sqlUltimas = `
-    ${baseQuery}
-    WHERE c.Estado = 'venta'
-    ORDER BY c.idCasaVenta DESC
-    LIMIT 5
-  `;
+  const sqlUltimas = `${baseQuery} WHERE c.Estado = 'venta' ORDER BY c.idCasaVenta DESC LIMIT 5`;
+  const sqlTodas   = `${baseQuery} ${filtroSQL} ORDER BY c.idCasaVenta DESC`;
 
-  const sqlTodas = `
-    ${baseQuery}
-    ${filtroSQL}
-    ORDER BY c.idCasaVenta DESC
-  `;
+  // Imagen ya es URL de Cloudinary, solo asignarla directamente
+  const procesar = lista =>
+    lista.map(c => ({ ...c, ImagenBase64: c.Imagen || null }));
 
-  // Últimas 5 casas
   bd.query(sqlUltimas, (err, ultimas) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).send("Error cargando últimas casas");
-    }
+    if (err) { console.error(err); return res.status(500).send("Error cargando últimas casas"); }
 
-    // Todas las casas
     bd.query(sqlTodas, params, (err, todas) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).send("Error cargando casas");
-      }
+      if (err) { console.error(err); return res.status(500).send("Error cargando casas"); }
 
-
-      const procesar = lista =>
-        lista.map(c => {
-
-          let imagenBase64 = null;
-
-          if (c.Imagen && Buffer.isBuffer(c.Imagen)) {
-            const base64 = c.Imagen.toString('base64');
-            imagenBase64 = `data:image/jpeg;base64,${base64}`;
-          }
-
-          return {
-            ...c,
-            ImagenBase64: imagenBase64
-          };
-        });
-
-  
       const id = req.session.IdPersona;
 
       bd.query("CALL ObtenerPerfil(?)", [id], (err, resultsPerfil) => {
 
-        let imagenUsuario = "";
+      let imagenUsuario = "";
 
         if (!err && resultsPerfil[0] && resultsPerfil[0].length > 0) {
           const data = resultsPerfil[0][0];
-
-          if (data.Imagen) {
-            if (Buffer.isBuffer(data.Imagen)) {
-              imagenUsuario = 'data:image/jpeg;base64,' + data.Imagen.toString('base64');
-            } else if (typeof data.Imagen === 'string') {
-              if (data.Imagen.startsWith('data:image')) {
-                imagenUsuario = data.Imagen;
-              } else {
-                imagenUsuario = 'data:image/jpeg;base64,' + data.Imagen;
-              }
-            }
-          }
+          imagenUsuario = data.Imagen || "";  // ← URL directa de Cloudinary
         }
 
-        
+        res.render('InicioDeAdministrativo', { // o 'InicioDeVendedor'
+          title: "Bienes Raíces",
+          ultimas: procesar(ultimas),
+          casas: procesar(todas),
+          ciudad, pais, precioMin, precioMax,
+          imagenUsuario
+        });
+    });
+
         res.render('InicioDeVendedor', {
           title: "Bienes Raíces",
           ultimas: procesar(ultimas),
           casas: procesar(todas),
-          ciudad,
-          pais,
-          precioMin,
-          precioMax,
-          imagenUsuario 
+          ciudad, pais, precioMin, precioMax,
+          imagenUsuario
         });
-
       });
-
     });
-  });
+  
 });
 
 router.get('/Error', function (req, res, next) {
@@ -350,7 +223,6 @@ router.post('/RegistroPersonas', async function (req, res, next) {
 });
 
 //Manejo de de inicio se sesion 
-
 router.post('/InicioSesion', function (req, res, next) {
 
   const usuario = req.body.usuario;
@@ -373,16 +245,18 @@ router.post('/InicioSesion', function (req, res, next) {
     const IdRol = rows[0][0].IdRol;
     const NombreRol = rows[0][0].NombreRol;
 
+    console.log("Resultado:", resultado); // ← log temporal
+
     if (resultado === 'Usuario y contraseña correctos') {
 
       // Guardar datos en sesión
       req.session.IdPersona = IdPersona;
       req.session.IdRol = IdRol;
       req.session.NombreRol = NombreRol;
+      req.session.usuario = { rol: NombreRol }; // ← agregado
 
       console.log(`Inicio de sesión exitoso: ID=${IdPersona}, Rol=${NombreRol}`);
 
-    
       req.session.save(function (err) {
 
         if (err) {
@@ -390,7 +264,6 @@ router.post('/InicioSesion', function (req, res, next) {
           return res.redirect('/Usuarios/Error');
         }
 
-        // Redirigir según rol
         switch (NombreRol) {
           case 'Administrador':
             return res.redirect('/Usuarios/InicioAdministrador');
@@ -419,11 +292,6 @@ router.get('/CargarPerfil', function (req, res) {
 
   const id = req.session.IdPersona;
 
-  console.log("ID de sesión:", id);
-  console.log("Cookies:", req.headers.cookie);
-  console.log("SessionID:", req.sessionID);
-  console.log("Session completa:", req.session);
-
   bd.query("CALL ObtenerPerfil(?)", [id], function (err, results) {
 
     if (err) {
@@ -431,115 +299,73 @@ router.get('/CargarPerfil', function (req, res) {
       return res.send("Error al cargar perfil");
     }
 
-  
-  let agent = {
-    idPersona: id, 
-    nombre: req.session.Nombre || "",
-    apellido: req.session.Apellido || "",
-    email: req.session.Correo || "",
-    telefono: req.session.Telefono || "",
-    descripcion: "",
-    experiencia: [],
-    redes: "",
-    imagen: ""
-  };
+    let agent = {
+      idPersona: id,
+      nombre:      req.session.Nombre    || "",
+      apellido:    req.session.Apellido  || "",
+      email:       req.session.Correo    || "",
+      telefono:    req.session.Telefono  || "",
+      descripcion: "",
+      experiencia: [],
+      redes:       "",
+      imagen:      ""
+    };
 
-      // Validar estructura
-  if (results[0] && results[0].length > 0) {
+    if (results[0] && results[0].length > 0) {
+      const data = results[0][0];
 
-    const data = results[0][0];
-
-    agent.nombre = data.Nombre;
-    agent.apellido = data.Apellido1;
-    agent.email = data.Correo;
-    agent.telefono = data.Telefono;
-
-    agent.descripcion = data.SobreMi;
-    agent.experiencia = data.Experiencia ? data.Experiencia.split(',') : [];
-    agent.redes = data.Redes;
-    if (data.Imagen) {
-
-   
-    if (Buffer.isBuffer(data.Imagen)) {
-      agent.imagen = 'data:image/jpeg;base64,' + data.Imagen.toString('base64');
-
-    } else if (typeof data.Imagen === 'string') {
-
-     
-      if (data.Imagen.startsWith('data:image')) {
-        agent.imagen = data.Imagen;
-      } else {
-        agent.imagen = 'data:image/jpeg;base64,' + data.Imagen;
-      }
-
+      agent.nombre      = data.Nombre;
+      agent.apellido    = data.Apellido1;
+      agent.email       = data.Correo;
+      agent.telefono    = data.Telefono;
+      agent.descripcion = data.SobreMi;
+      agent.experiencia = data.Experiencia ? data.Experiencia.split(',') : [];
+      agent.redes       = data.Redes;
+      agent.imagen      = data.Imagen || ""; // ← URL directa de Cloudinary
     }
 
-    }
-      } else {
-        console.log("No se encontraron resultados para ese ID");
-      }
-
-      res.render('Perfil', { agent, propiedades: [] });
-
-    });
-
+    res.render('Perfil', { agent, propiedades: [] });
+  });
 });
-router.post('/GuardarPerfil', upload.single('imagen'), function (req, res) {
+
+
+router.post('/GuardarPerfil', upload.single('imagen'), async function (req, res) {
 
   const id = req.session.IdPersona;
   const { SobreMi, Experiencia, Redes } = req.body;
-  const imagen = req.file ? req.file.buffer : null;
 
-  bd.query(
-    "CALL GuardarPerfil(?, ?, ?, ?, ?)",
-    [id, SobreMi, Experiencia, Redes, imagen],
-    function (error, results) {
-
-      if (error) {
-        console.log(error);
-        return res.send("Error al guardar perfil");
-      }
-
-      res.redirect('/Usuarios/CargarPerfil');
+  try {
+    // Subir imagen a Cloudinary solo si se envió una nueva
+    let imagenURL = null;
+    if (req.file) {
+      imagenURL = await subirACloudinary(req.file.buffer, 'perfiles');
     }
-  );
 
+    bd.query(
+      "CALL GuardarPerfil(?, ?, ?, ?, ?)",
+      [id, SobreMi, Experiencia, Redes, imagenURL],
+      function (error) {
+        if (error) {
+          console.log(error);
+          return res.send("Error al guardar perfil");
+        }
+        res.redirect('/Usuarios/CargarPerfil');
+      }
+    );
+
+  } catch (err) {
+    console.error("Error subiendo imagen a Cloudinary:", err);
+    res.status(500).send("Error al guardar perfil");
+  }
 });
+
 
 router.get('/imagen/:id', function (req, res) {
-
-  const id = req.params.id;
-
-  bd.query(
-    "SELECT Imagen FROM informacion WHERE idPersona = ?",
-    [id],
-    function (err, results) {
-
-      if (err) {
-        console.log(err);
-        return res.send("Error al cargar imagen");
-      }
-
-      if (results.length > 0 && results[0].Imagen) {
-        res.setHeader("Content-Type", "image/jpeg");
-        res.send(results[0].Imagen);
-      } else {
-        res.redirect('/img/user.png'); // imagen por defecto
-      }
-
-    }
-  );
-
+  res.redirect('/img/user.png');
 });
 
-//router.get('/', (req, res) => {
-  //bd.query('SELECT * FROM Persona', (err, results) => {
-    //res.render('Personas', {
-     // Usuarios: results,
-    //  msg: req.query.msg
-   // });
-  //});
-//});
+
+
 
 
 
@@ -628,5 +454,8 @@ router.post('/editarPersona/:id', (req, res) => {
     }
   );
 });
+
+
+
 
 module.exports = router;
